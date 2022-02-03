@@ -1,4 +1,4 @@
-module github.com/Richard-Barrett/terraform-provider-mirantis
+module github.com/Mirantis/terraform-provider-mirantis
 
 go 1.17
 
