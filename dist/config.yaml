@@ -1,7 +1,7 @@
 project_name: terraform-provider-mirantis
 release:
   github:
-    owner: Richard-Barrett
+    owner: Mirantis
     name: terraform-provider-mirantis
   name_template: '{{.Tag}}'
   extra_files:
