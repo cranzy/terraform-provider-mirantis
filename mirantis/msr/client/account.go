@@ -8,8 +8,8 @@ import (
 	"net/http"
 )
 
-// User struct
-type User struct {
+// Account struct
+type Account struct {
 	Name       string `json:"name"`
 	ID         string `json:"id"`
 	Password   string `json:"password"`
@@ -21,34 +21,34 @@ type User struct {
 }
 
 // Create method - checking the MSR health endpoint
-func (c *Client) CreateUser(ctx context.Context, user User) (User, error) {
+func (c *Client) CreateAccount(ctx context.Context, user Account) (Account, error) {
 	body, err := json.Marshal(user)
 	if err != nil {
-		return User{}, fmt.Errorf("create user failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("create user failed in MSR client. %w ", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.createEnziUrl("accounts"), bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	if err != nil {
-		return User{}, fmt.Errorf("request creation failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("request creation failed in MSR client. %w ", err)
 	}
 
 	body, err = c.doRequest(req)
 
 	if err != nil {
-		return User{}, err
+		return Account{}, err
 	}
 
 	if err := json.Unmarshal(body, &user); err != nil {
-		return User{}, fmt.Errorf("create user failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("create user failed in MSR client. %w ", err)
 	}
 
 	return user, nil
 }
 
-// DeleteUser deletes a user from in Enzi
-func (c *Client) DeleteUser(ctx context.Context, id string) error {
+// DeleteAccount deletes a user from in Enzi
+func (c *Client) DeleteAccount(ctx context.Context, id string) error {
 	url := fmt.Sprintf("%s/%s", c.createEnziUrl("accounts"), id)
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 
@@ -61,51 +61,51 @@ func (c *Client) DeleteUser(ctx context.Context, id string) error {
 	return err
 }
 
-// ReadUser method retrieves a user from the enzi endpoint
-func (c *Client) ReadUser(ctx context.Context, name string) (User, error) {
+// ReadAccount method retrieves a user from the enzi endpoint
+func (c *Client) ReadAccount(ctx context.Context, name string) (Account, error) {
 	url := fmt.Sprintf("%s/%s", c.createEnziUrl("accounts"), name)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
 	if err != nil {
-		return User{}, err
+		return Account{}, err
 	}
 
 	body, err := c.doRequest(req)
 
 	if err != nil {
-		return User{}, err
+		return Account{}, err
 	}
 
-	user := User{}
+	user := Account{}
 	if err := json.Unmarshal(body, &user); err != nil {
-		return User{}, fmt.Errorf("get user failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("get user failed in MSR client. %w ", err)
 	}
 	return user, nil
 }
 
-// UpdateUser updates a user in the enzi endpoint
-func (c *Client) UpdateUser(ctx context.Context, user User) (User, error) {
+// UpdateAccount updates a user in the enzi endpoint
+func (c *Client) UpdateAccount(ctx context.Context, user Account) (Account, error) {
 	url := fmt.Sprintf("%s/%s", c.createEnziUrl("accounts"), user.ID)
 
 	body, err := json.Marshal(user)
 	if err != nil {
-		return User{}, fmt.Errorf("update user failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("update user failed in MSR client. %w ", err)
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	if err != nil {
-		return User{}, err
+		return Account{}, err
 	}
 
 	body, err = c.doRequest(req)
 
 	if err != nil {
-		return User{}, err
+		return Account{}, err
 	}
 
 	if json.Unmarshal(body, &user) != nil {
-		return User{}, fmt.Errorf("update user failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("update user failed in MSR client. %w ", err)
 	}
 	return user, nil
 }

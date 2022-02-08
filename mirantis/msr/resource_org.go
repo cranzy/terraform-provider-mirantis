@@ -9,21 +9,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// ResourceUsers for managing MSR users
-func ResourceUsers() *schema.Resource {
+// ResourceOrgs for managing MSR accs
+func ResourceOrgs() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceUserCreate,
-		ReadContext:   resourceUserRead,
-		UpdateContext: resourceUserUpdate,
-		DeleteContext: resourceUserDelete,
+		CreateContext: resourceOrgCreate,
+		ReadContext:   resourceOrgRead,
+		UpdateContext: resourceOrgUpdate,
+		DeleteContext: resourceOrgDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"full_name": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"last_updated": {
 				Type:     schema.TypeString,
@@ -37,22 +33,18 @@ func ResourceUsers() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOrgCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c, ok := m.(client.Client)
 	if !ok {
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
 
-	user := client.Account{
-		Name:       d.Get("name").(string),
-		Password:   client.GeneratePass(),
-		FullName:   d.Get("full_name").(string),
-		IsActive:   true,
-		IsAdmin:    false,
-		IsOrg:      false,
-		SearchLDAP: false,
+	acc := client.Account{
+		Name:     d.Get("name").(string),
+		IsActive: true,
+		IsOrg:    true,
 	}
-	u, err := c.CreateAccount(ctx, user)
+	u, err := c.CreateAccount(ctx, acc)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -65,7 +57,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 	return diag.Diagnostics{}
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOrgRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c, ok := m.(client.Client)
 	if !ok {
 		return diag.Errorf("unable to cast meta interface to MSR Client")
@@ -73,7 +65,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 	u, err := c.ReadAccount(ctx, d.Get("name").(string))
 	if err != nil {
-		// If the user doesn't exist we should gracefully handle it
+		// If the acc doesn't exist we should gracefully handle it
 		d.SetId("")
 		return diag.FromErr(err)
 	}
@@ -83,23 +75,20 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	return diag.Diagnostics{}
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOrgUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c, ok := m.(client.Client)
 
 	if !ok {
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
-	if d.HasChange("msr_users") {
-		user := client.Account{
-			Name:       d.Get("name").(string),
-			ID:         d.State().ID,
-			FullName:   d.Get("full_name").(string),
-			IsActive:   true,
-			IsAdmin:    false,
-			IsOrg:      false,
-			SearchLDAP: false,
+	if d.HasChange("msr_accs") {
+		acc := client.Account{
+			Name:     d.Get("name").(string),
+			ID:       d.State().ID,
+			IsActive: true,
+			IsOrg:    true,
 		}
-		_, err := c.UpdateAccount(ctx, user)
+		_, err := c.UpdateAccount(ctx, acc)
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -109,10 +98,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			return diag.FromErr(err)
 		}
 	}
-	return resourceUserRead(ctx, d, m)
+	return resourceOrgRead(ctx, d, m)
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceOrgDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c, ok := m.(client.Client)
 
 	if !ok {
