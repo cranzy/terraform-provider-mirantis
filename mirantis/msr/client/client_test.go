@@ -27,6 +27,7 @@ func TestMSRClientCreation(t *testing.T) {
 	c, err := createClientFixture()
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	ctx := context.Background()
 	healthy, err := c.IsHealthy(ctx)
@@ -69,6 +70,7 @@ func TestUpdateUser(t *testing.T) {
 	c, err := createClientFixture()
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	testUserName := "unittest_updateuser2"
 
@@ -108,6 +110,7 @@ func TestReadUser(t *testing.T) {
 	c, err := createClientFixture()
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	testUserName := "unittest_readuser"
 	cUser := client.User{

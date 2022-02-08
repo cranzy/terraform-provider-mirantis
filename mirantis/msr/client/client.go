@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -62,6 +63,12 @@ func NewClient(host, username, password string) (Client, error) {
 		c.MsrURL = host
 	}
 
+	ctx := context.Background()
+	_, err := c.GetMSRVersion(ctx)
+
+	if err != nil {
+		return Client{}, fmt.Errorf("invalid credentials. %w", err)
+	}
 	return c, nil
 }
 
@@ -81,9 +88,12 @@ func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 	}
 
 	if res.StatusCode >= http.StatusBadRequest {
+		if res.StatusCode == http.StatusUnauthorized {
+			return nil, errors.New("MSR API Unauthorized request")
+		}
 		errStruct := &ResponseError{}
-		if json.Unmarshal(body, errStruct) != nil {
-			return nil, err
+		if err := json.Unmarshal(body, errStruct); err != nil {
+			return nil, fmt.Errorf("response status is %d . MSR API Error. %w", res.StatusCode, err)
 		}
 		errMsg := errors.New(errStruct.Errors[0].Message)
 		return nil, fmt.Errorf("response status is: %d. MSR API Error: %w", res.StatusCode, errMsg)
