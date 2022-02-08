@@ -44,7 +44,7 @@ func TestAddAndDeleteUser(t *testing.T) {
 		return
 	}
 	testUserName := "unittest3"
-	user := client.User{
+	user := client.Account{
 		Name:     testUserName,
 		Password: client.GeneratePass(),
 		FullName: "Unit Test",
@@ -52,7 +52,7 @@ func TestAddAndDeleteUser(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	rUser, err := c.CreateUser(ctx, user)
+	rUser, err := c.CreateAccount(ctx, user)
 
 	if err != nil {
 		t.Error(err)
@@ -60,7 +60,7 @@ func TestAddAndDeleteUser(t *testing.T) {
 	if rUser.Name != testUserName {
 		t.Error("User created doesn't match expected user")
 	}
-	err = c.DeleteUser(ctx, testUserName)
+	err = c.DeleteAccount(ctx, testUserName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -75,7 +75,7 @@ func TestUpdateUser(t *testing.T) {
 	testUserName := "unittest_updateuser2"
 
 	ctx := context.Background()
-	cUser := client.User{
+	cUser := client.Account{
 		Name:     testUserName,
 		Password: client.GeneratePass(),
 		FullName: "Unit Test",
@@ -84,13 +84,13 @@ func TestUpdateUser(t *testing.T) {
 
 	testFullName := "Test Updateee"
 	testIsActive := false
-	cUser, err = c.CreateUser(ctx, cUser)
+	cUser, err = c.CreateAccount(ctx, cUser)
 	if err != nil {
 		t.Error("")
 	}
 	cUser.FullName = testFullName
 	cUser.IsActive = testIsActive
-	uUser, err := c.UpdateUser(ctx, cUser)
+	uUser, err := c.UpdateAccount(ctx, cUser)
 	if err != nil {
 		t.Error(err)
 	} else {
@@ -100,7 +100,7 @@ func TestUpdateUser(t *testing.T) {
 			t.Error("IsActive doesn't match")
 		}
 	}
-	err = c.DeleteUser(ctx, testUserName)
+	err = c.DeleteAccount(ctx, testUserName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -113,18 +113,18 @@ func TestReadUser(t *testing.T) {
 		return
 	}
 	testUserName := "unittest_readuser"
-	cUser := client.User{
+	cUser := client.Account{
 		Name:     testUserName,
 		Password: client.GeneratePass(),
 		FullName: "Unit Test",
 		IsActive: true,
 	}
 	ctx := context.Background()
-	rUser, err := c.CreateUser(ctx, cUser)
+	rUser, err := c.CreateAccount(ctx, cUser)
 	if err != nil {
 		t.Error(err)
 	}
-	rUser, err = c.ReadUser(ctx, rUser.Name)
+	rUser, err = c.ReadAccount(ctx, rUser.Name)
 	if err != nil {
 		t.Error(err)
 	} else {
@@ -132,7 +132,35 @@ func TestReadUser(t *testing.T) {
 			t.Error("User created doesn't match expected")
 		}
 	}
-	err = c.DeleteUser(ctx, testUserName)
+	err = c.DeleteAccount(ctx, testUserName)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestAddAndDeleteOrg(t *testing.T) {
+	c, err := createClientFixture()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	testUserName := "unittest3"
+	account := client.Account{
+		Name:     testUserName,
+		IsActive: true,
+		IsOrg:    true,
+	}
+
+	ctx := context.Background()
+	rAccount, err := c.CreateAccount(ctx, account)
+
+	if err != nil {
+		t.Error(err)
+	}
+	if rAccount.Name != testUserName {
+		t.Error("User created doesn't match expected user")
+	}
+	err = c.DeleteAccount(ctx, testUserName)
 	if err != nil {
 		t.Error(err)
 	}
