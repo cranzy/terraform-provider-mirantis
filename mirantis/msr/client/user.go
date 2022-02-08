@@ -58,11 +58,7 @@ func (c *Client) DeleteUser(ctx context.Context, id string) error {
 
 	_, err = c.doRequest(req)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // ReadUser method retrieves a user from the enzi endpoint
