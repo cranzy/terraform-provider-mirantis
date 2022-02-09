@@ -64,9 +64,8 @@ func NewClient(host, username, password string) (Client, error) {
 	}
 
 	ctx := context.Background()
-	_, err := c.GetMSRVersion(ctx)
 
-	if err != nil {
+	if _, err := c.GetMSRVersion(ctx); err != nil {
 		return Client{}, fmt.Errorf("invalid credentials. %w", err)
 	}
 	return c, nil
