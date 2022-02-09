@@ -31,6 +31,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"msr_users": msr.ResourceUsers(),
+			"msr_orgs":  msr.ResourceOrgs(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
