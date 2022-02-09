@@ -52,6 +52,7 @@ func TestAddAndDeleteUser(t *testing.T) {
 	}
 
 	ctx := context.Background()
+
 	rUser, err := c.CreateAccount(ctx, user)
 
 	if err != nil {
@@ -60,8 +61,7 @@ func TestAddAndDeleteUser(t *testing.T) {
 	if rUser.Name != testUserName {
 		t.Error("User created doesn't match expected user")
 	}
-	err = c.DeleteAccount(ctx, testUserName)
-	if err != nil {
+	if c.DeleteAccount(ctx, testUserName) != nil {
 		t.Error(err)
 	}
 }
@@ -75,7 +75,7 @@ func TestUpdateUser(t *testing.T) {
 	testUserName := "unittest_updateuser2"
 
 	ctx := context.Background()
-	cUser := client.Account{
+	nUser := client.Account{
 		Name:     testUserName,
 		Password: client.GeneratePass(),
 		FullName: "Unit Test",
@@ -84,7 +84,7 @@ func TestUpdateUser(t *testing.T) {
 
 	testFullName := "Test Updateee"
 	testIsActive := false
-	cUser, err = c.CreateAccount(ctx, cUser)
+	cUser, err := c.CreateAccount(ctx, nUser)
 	if err != nil {
 		t.Error("")
 	}
@@ -100,8 +100,7 @@ func TestUpdateUser(t *testing.T) {
 			t.Error("IsActive doesn't match")
 		}
 	}
-	err = c.DeleteAccount(ctx, testUserName)
-	if err != nil {
+	if c.DeleteAccount(ctx, testUserName) != nil {
 		t.Error(err)
 	}
 }
@@ -113,18 +112,18 @@ func TestReadUser(t *testing.T) {
 		return
 	}
 	testUserName := "unittest_readuser"
-	cUser := client.Account{
+	nUser := client.Account{
 		Name:     testUserName,
 		Password: client.GeneratePass(),
 		FullName: "Unit Test",
 		IsActive: true,
 	}
 	ctx := context.Background()
-	rUser, err := c.CreateAccount(ctx, cUser)
+	cUser, err := c.CreateAccount(ctx, nUser)
 	if err != nil {
 		t.Error(err)
 	}
-	rUser, err = c.ReadAccount(ctx, rUser.Name)
+	rUser, err := c.ReadAccount(ctx, cUser.Name)
 	if err != nil {
 		t.Error(err)
 	} else {
@@ -132,8 +131,7 @@ func TestReadUser(t *testing.T) {
 			t.Error("User created doesn't match expected")
 		}
 	}
-	err = c.DeleteAccount(ctx, testUserName)
-	if err != nil {
+	if c.DeleteAccount(ctx, testUserName) != nil {
 		t.Error(err)
 	}
 }
@@ -160,8 +158,7 @@ func TestAddAndDeleteOrg(t *testing.T) {
 	if rAccount.Name != testUserName {
 		t.Error("User created doesn't match expected user")
 	}
-	err = c.DeleteAccount(ctx, testUserName)
-	if err != nil {
+	if c.DeleteAccount(ctx, testUserName) != nil {
 		t.Error(err)
 	}
 }

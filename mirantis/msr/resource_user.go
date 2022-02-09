@@ -56,8 +56,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("last_updated", time.Now().Format(time.RFC850))
-	if err != nil {
+	if err := d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(u.ID)
@@ -71,7 +70,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
 
-	u, err := c.ReadAccount(ctx, d.Get("name").(string))
+	u, err := c.ReadAccount(ctx, d.State().ID)
 	if err != nil {
 		// If the user doesn't exist we should gracefully handle it
 		d.SetId("")
@@ -99,13 +98,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			IsOrg:      false,
 			SearchLDAP: false,
 		}
-		_, err := c.UpdateAccount(ctx, user)
-
-		if err != nil {
+		if _, err := c.UpdateAccount(ctx, user); err != nil {
 			return diag.FromErr(err)
 		}
-		err = d.Set("last_updated", time.Now().Format(time.RFC850))
-		if err != nil {
+		if err := d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -118,8 +114,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface
 	if !ok {
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
-	err := c.DeleteAccount(ctx, d.State().ID)
-	if err != nil {
+	if err := c.DeleteAccount(ctx, d.State().ID); err != nil {
 		return diag.FromErr(err)
 	}
 

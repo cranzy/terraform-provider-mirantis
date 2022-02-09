@@ -40,16 +40,14 @@ func resourceOrgCreate(ctx context.Context, d *schema.ResourceData, m interface{
 	}
 
 	acc := client.Account{
-		Name:     d.Get("name").(string),
-		IsActive: true,
-		IsOrg:    true,
+		Name:  d.Get("name").(string),
+		IsOrg: true,
 	}
 	u, err := c.CreateAccount(ctx, acc)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	err = d.Set("last_updated", time.Now().Format(time.RFC850))
-	if err != nil {
+	if err := d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(u.ID)
@@ -63,7 +61,7 @@ func resourceOrgRead(ctx context.Context, d *schema.ResourceData, m interface{})
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
 
-	u, err := c.ReadAccount(ctx, d.Get("name").(string))
+	u, err := c.ReadAccount(ctx, d.State().ID)
 	if err != nil {
 		// If the acc doesn't exist we should gracefully handle it
 		d.SetId("")
@@ -83,18 +81,16 @@ func resourceOrgUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	}
 	if d.HasChange("msr_accs") {
 		acc := client.Account{
-			Name:     d.Get("name").(string),
-			ID:       d.State().ID,
-			IsActive: true,
-			IsOrg:    true,
+			Name:  d.Get("name").(string),
+			ID:    d.State().ID,
+			IsOrg: true,
 		}
 		_, err := c.UpdateAccount(ctx, acc)
 
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		err = d.Set("last_updated", time.Now().Format(time.RFC850))
-		if err != nil {
+		if err := d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -107,8 +103,7 @@ func resourceOrgDelete(ctx context.Context, d *schema.ResourceData, m interface{
 	if !ok {
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
-	err := c.DeleteAccount(ctx, d.State().ID)
-	if err != nil {
+	if err := c.DeleteAccount(ctx, d.State().ID); err != nil {
 		return diag.FromErr(err)
 	}
 
