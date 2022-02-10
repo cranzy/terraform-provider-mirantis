@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// ResourceOrgs for managing MSR accs
-func ResourceOrgs() *schema.Resource {
+// ResourceOrg for managing MSR org
+func ResourceOrg() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceOrgCreate,
 		ReadContext:   resourceOrgRead,
@@ -79,7 +79,7 @@ func resourceOrgUpdate(ctx context.Context, d *schema.ResourceData, m interface{
 	if !ok {
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
-	if d.HasChange("msr_accs") {
+	if d.HasChange("msr_org") {
 		acc := client.Account{
 			Name:  d.Get("name").(string),
 			ID:    d.State().ID,
