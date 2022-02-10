@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// ResourceUsers for managing MSR users
-func ResourceUsers() *schema.Resource {
+// ResourceUser for managing MSR user
+func ResourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceUserCreate,
 		ReadContext:   resourceUserRead,
@@ -88,7 +88,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	if !ok {
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
-	if d.HasChange("msr_users") {
+	if d.HasChange("msr_user") {
 		user := client.Account{
 			Name:       d.Get("name").(string),
 			ID:         d.State().ID,
