@@ -1,4 +1,4 @@
-package mirantis
+package msr_test
 
 import (
 	//"os"

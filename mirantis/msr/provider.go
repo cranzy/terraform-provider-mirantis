@@ -1,9 +1,8 @@
-package mirantis
+package msr
 
 import (
 	"context"
 
-	"github.com/Mirantis/terraform-provider-mirantis/mirantis/msr"
 	"github.com/Mirantis/terraform-provider-mirantis/mirantis/msr/client"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,9 +29,9 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"msr_user": msr.ResourceUser(),
-			"msr_org":  msr.ResourceOrg(),
-			"msr_team": msr.ResourceTeam(),
+			"msr_user": ResourceUser(),
+			"msr_org":  ResourceOrg(),
+			"msr_team": ResourceTeam(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
