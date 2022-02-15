@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
 )
 
 const (
@@ -55,7 +54,7 @@ func NewClient(host, username, password string) (Client, error) {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	c := Client{
-		HTTPClient: &http.Client{Timeout: 10 * time.Second, Transport: tr},
+		HTTPClient: &http.Client{Transport: tr},
 		MsrURL:     DEFAULTMSRURL,
 		Creds:      creds,
 	}
@@ -66,7 +65,7 @@ func NewClient(host, username, password string) (Client, error) {
 	ctx := context.Background()
 
 	if _, err := c.GetMSRVersion(ctx); err != nil {
-		return Client{}, fmt.Errorf("invalid credentials. %w", err)
+		return Client{}, fmt.Errorf("invalid credentials: %w", err)
 	}
 	return c, nil
 }
@@ -92,7 +91,7 @@ func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 		}
 		errStruct := &ResponseError{}
 		if err := json.Unmarshal(body, errStruct); err != nil {
-			return nil, fmt.Errorf("response status is %d . MSR API Error. %w", res.StatusCode, err)
+			return nil, fmt.Errorf("response status is %d . MSR API Error: %w", res.StatusCode, err)
 		}
 		errMsg := errors.New(errStruct.Errors[0].Message)
 		return nil, fmt.Errorf("response status is: %d. MSR API Error: %w", res.StatusCode, errMsg)

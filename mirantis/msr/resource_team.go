@@ -29,6 +29,13 @@ func ResourceTeam() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"user_ids": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"last_updated": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -60,6 +67,15 @@ func resourceTeamCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	d.SetId(t.ID)
 
+	for _, id := range d.Get("user_ids").([]interface{}) {
+		u := client.Account{
+			ID: id.(string),
+		}
+		if err := c.AddUserToTeam(ctx, d.Get("org_id").(string), t.ID, u); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	return diag.Diagnostics{}
 }
 
@@ -87,17 +103,27 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	if !ok {
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
-	if d.HasChange("msr_team") {
-		team := client.Team{
-			ID:          d.State().ID,
-			Description: d.Get("description").(string),
-		}
-		if _, err := c.UpdateTeam(ctx, d.Get("org_id").(string), team); err != nil {
+	team := client.Team{
+		ID:          d.State().ID,
+		Description: d.Get("description").(string),
+	}
+	orgID := d.Get("org_id").(string)
+
+	if d.HasChange("description") {
+		if _, err := c.UpdateTeam(ctx, orgID, team); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
+	}
+
+	if d.HasChange("user_ids") {
+		_, n := d.GetChange("user_ids")
+		if err := c.UpdateTeamUsers(ctx, orgID, team.ID, n.([]interface{})); err != nil {
 			return diag.FromErr(err)
 		}
+	}
+
+	if err := d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
+		return diag.FromErr(err)
 	}
 	return resourceTeamRead(ctx, d, m)
 }

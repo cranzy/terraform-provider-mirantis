@@ -54,7 +54,7 @@ func (c *Client) GetMSRVersion(ctx context.Context) (string, error) {
 
 	ver := MSRVersion{}
 	if err := json.Unmarshal(body, &ver); err != nil {
-		return "", fmt.Errorf("MSR API client. %w", err)
+		return "", fmt.Errorf("MSR API client: %w", err)
 	}
 
 	return ver.Version, err
