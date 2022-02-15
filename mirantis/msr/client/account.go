@@ -24,12 +24,12 @@ type Account struct {
 func (c *Client) CreateAccount(ctx context.Context, acc Account) (Account, error) {
 	body, err := json.Marshal(acc)
 	if err != nil {
-		return Account{}, fmt.Errorf("create user failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("create user failed in MSR client: %w ", err)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.createEnziUrl("accounts"), bytes.NewBuffer(body))
 	if err != nil {
-		return Account{}, fmt.Errorf("request creation failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("request creation failed in MSR client: %w ", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
@@ -39,7 +39,7 @@ func (c *Client) CreateAccount(ctx context.Context, acc Account) (Account, error
 	}
 
 	if err := json.Unmarshal(resBody, &acc); err != nil {
-		return Account{}, fmt.Errorf("create account failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("create account failed in MSR client: %w ", err)
 	}
 
 	return acc, nil
@@ -51,7 +51,7 @@ func (c *Client) DeleteAccount(ctx context.Context, id string) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 
 	if err != nil {
-		return fmt.Errorf("delete account failed in MSR client. %w ", err)
+		return fmt.Errorf("delete account failed in MSR client: %w ", err)
 	}
 
 	_, err = c.doRequest(req)
@@ -76,7 +76,7 @@ func (c *Client) ReadAccount(ctx context.Context, id string) (Account, error) {
 
 	acc := Account{}
 	if err := json.Unmarshal(body, &acc); err != nil {
-		return Account{}, fmt.Errorf("read account failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("read account failed in MSR client: %w ", err)
 	}
 	return acc, nil
 }
@@ -87,7 +87,7 @@ func (c *Client) UpdateAccount(ctx context.Context, acc Account) (Account, error
 
 	body, err := json.Marshal(acc)
 	if err != nil {
-		return Account{}, fmt.Errorf("update user failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("update user failed in MSR client: %w ", err)
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, bytes.NewBuffer(body))
 
@@ -104,7 +104,7 @@ func (c *Client) UpdateAccount(ctx context.Context, acc Account) (Account, error
 	}
 
 	if json.Unmarshal(resBody, &acc) != nil {
-		return Account{}, fmt.Errorf("update user failed in MSR client. %w ", err)
+		return Account{}, fmt.Errorf("update user failed in MSR client: %w ", err)
 	}
 	return acc, nil
 }
