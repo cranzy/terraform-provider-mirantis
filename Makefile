@@ -3,7 +3,7 @@ BINARY_ROOT=terraform-provider
 INSTALL_ROOT?=$(HOME)/.terraform.d/plugins
 LOCAL_BIN_PATH?=./bin
 
-VERSION?=$(shell git describe --tags)
+VERSION=0.9.0
 
 PROVIDERS?=msr
 ARCHES?=amd64 arm64
