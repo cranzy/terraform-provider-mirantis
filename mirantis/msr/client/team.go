@@ -69,8 +69,6 @@ func (c *Client) ReadTeam(ctx context.Context, orgID string, teamID string) (Tea
 		return Team{}, fmt.Errorf("read team failed in MSR client: %w ", err)
 	}
 
-	c.GetTeamUsers(ctx, orgID, teamID)
-
 	return team, nil
 }
 
@@ -195,7 +193,10 @@ func (c *Client) UpdateTeamUsers(ctx context.Context, orgID string, teamID strin
 		a := Account{
 			ID: u.(string),
 		}
-		c.AddUserToTeam(ctx, orgID, teamID, a)
+		// Log the failure in the future if you fail to add an user to a team
+		if err := c.AddUserToTeam(ctx, orgID, teamID, a); err != nil {
+			continue
+		}
 	}
 
 	return nil
