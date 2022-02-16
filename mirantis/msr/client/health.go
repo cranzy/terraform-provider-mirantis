@@ -30,9 +30,9 @@ func (c *Client) IsHealthy(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
-	hResponse := &HealthResponse{}
+	hResponse := HealthResponse{}
 
-	if err := json.Unmarshal(body, hResponse); err != nil {
+	if err := json.Unmarshal(body, &hResponse); err != nil {
 		return false, err
 	}
 
@@ -46,7 +46,6 @@ func (c *Client) GetMSRVersion(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	body, err := c.doRequest(req)
 	if err != nil {
 		return "", err

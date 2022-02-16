@@ -1,9 +1,9 @@
 package msr_test
 
 import (
-	//"os"
 	"testing"
 
+	"github.com/Mirantis/terraform-provider-mirantis/mirantis/msr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -11,20 +11,20 @@ var testAccProviders map[string]*schema.Provider
 var testAccProvider *schema.Provider
 
 func init() {
-	testAccProvider = Provider()
+	testAccProvider = msr.Provider()
 	testAccProviders = map[string]*schema.Provider{
 		"MIRANTIS": testAccProvider,
 	}
 }
 
 func TestProvider(t *testing.T) {
-	if err := Provider().InternalValidate(); err != nil {
+	if err := msr.Provider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ *schema.Provider = Provider()
+	var _ *schema.Provider = msr.Provider()
 }
 
 // func testAccPreCheck(t *testing.T) {

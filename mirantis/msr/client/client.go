@@ -32,18 +32,20 @@ type AuthStruct struct {
 	Password string `json:"password"`
 }
 
+type Errors struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
 // ResponseError structure from MSR
 type ResponseError struct {
-	Errors []struct {
-		Code    string `json:"code"`
-		Message string `json:"message"`
-	} `json:"errors"`
+	Errors []Errors `json:"errors"`
 }
 
 // NewClient creates a new MSR HTTP Client
 func NewClient(host, username, password string) (Client, error) {
 	if username == "" || password == "" {
-		return Client{}, fmt.Errorf("unable to create msr client")
+		return Client{}, fmt.Errorf("no username or password provided")
 	}
 
 	creds := AuthStruct{
@@ -65,7 +67,7 @@ func NewClient(host, username, password string) (Client, error) {
 	ctx := context.Background()
 
 	if _, err := c.GetMSRVersion(ctx); err != nil {
-		return Client{}, fmt.Errorf("invalid credentials: %w", err)
+		return Client{}, err
 	}
 	return c, nil
 }
@@ -81,20 +83,26 @@ func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
+
 	if err != nil {
 		return nil, err
 	}
-
 	if res.StatusCode >= http.StatusBadRequest {
 		if res.StatusCode == http.StatusUnauthorized {
-			return nil, errors.New("MSR API Unauthorized request")
+			return nil, fmt.Errorf("MSR API Error: response status: %d. Unauthorized request", res.StatusCode)
 		}
 		errStruct := &ResponseError{}
 		if err := json.Unmarshal(body, errStruct); err != nil {
-			return nil, fmt.Errorf("response status is %d . MSR API Error: %w", res.StatusCode, err)
+			return nil, fmt.Errorf("MSR API Error: response status: %d. %w", res.StatusCode, err)
 		}
+
+		if len(errStruct.Errors) <= 0 {
+			return nil, fmt.Errorf("MSR API Error: response status is: %d. Wrong unmarshal struct for %s", res.StatusCode, body)
+		}
+
 		errMsg := errors.New(errStruct.Errors[0].Message)
-		return nil, fmt.Errorf("response status is: %d. MSR API Error: %w", res.StatusCode, errMsg)
+
+		return nil, fmt.Errorf("MSR API Error: response status is: %d. %w", res.StatusCode, errMsg)
 	}
 
 	return body, err
