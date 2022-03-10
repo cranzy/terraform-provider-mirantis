@@ -25,6 +25,16 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"is_active": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"is_admin": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"last_updated": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -43,12 +53,12 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
 
-	user := client.Account{
+	user := client.CreateAccount{
 		Name:       d.Get("name").(string),
 		Password:   client.GeneratePass(),
 		FullName:   d.Get("full_name").(string),
-		IsActive:   true,
-		IsAdmin:    false,
+		IsActive:   d.Get("is_active").(bool),
+		IsAdmin:    d.Get("is_admin").(bool),
 		IsOrg:      false,
 		SearchLDAP: false,
 	}
@@ -89,16 +99,12 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
 	if d.HasChange("msr_user") {
-		user := client.Account{
-			Name:       d.Get("name").(string),
-			ID:         d.State().ID,
-			FullName:   d.Get("full_name").(string),
-			IsActive:   true,
-			IsAdmin:    false,
-			IsOrg:      false,
-			SearchLDAP: false,
+		user := client.UpdateAccount{
+			FullName: d.Get("full_name").(string),
+			IsActive: d.Get("is_active").(bool),
+			IsAdmin:  d.Get("is_admin").(bool),
 		}
-		if _, err := c.UpdateAccount(ctx, user); err != nil {
+		if _, err := c.UpdateAccount(ctx, d.State().ID, user); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {

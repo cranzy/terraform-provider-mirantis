@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -45,7 +44,7 @@ type ResponseError struct {
 // NewClient creates a new MSR HTTP Client
 func NewClient(host, username, password string) (Client, error) {
 	if username == "" || password == "" {
-		return Client{}, fmt.Errorf("no username or password provided")
+		return Client{}, ErrEmptyUsernamePass
 	}
 
 	creds := AuthStruct{
@@ -64,11 +63,6 @@ func NewClient(host, username, password string) (Client, error) {
 		c.MsrURL = host
 	}
 
-	ctx := context.Background()
-
-	if _, err := c.GetMSRVersion(ctx); err != nil {
-		return Client{}, err
-	}
 	return c, nil
 }
 
@@ -89,20 +83,20 @@ func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 	}
 	if res.StatusCode >= http.StatusBadRequest {
 		if res.StatusCode == http.StatusUnauthorized {
-			return nil, fmt.Errorf("MSR API Error: response status: %d. Unauthorized request", res.StatusCode)
+			return nil, fmt.Errorf("%w: Status code: %d", ErrUnauthorizedReq, res.StatusCode)
 		}
 		errStruct := &ResponseError{}
 		if err := json.Unmarshal(body, errStruct); err != nil {
-			return nil, fmt.Errorf("MSR API Error: response status: %d. %w", res.StatusCode, err)
+			return nil, fmt.Errorf("%w: Status code: %d", ErrUnmarshaling, res.StatusCode)
 		}
 
 		if len(errStruct.Errors) <= 0 {
-			return nil, fmt.Errorf("MSR API Error: response status is: %d. Wrong unmarshal struct for %s", res.StatusCode, body)
+			return nil, fmt.Errorf("%w: Status code: %d", ErrEmptyResError, res.StatusCode)
 		}
 
 		errMsg := errors.New(errStruct.Errors[0].Message)
 
-		return nil, fmt.Errorf("MSR API Error: response status is: %d. %w", res.StatusCode, errMsg)
+		return nil, fmt.Errorf("%w: Status code: %d. ErrMsg: %s", ErrResponseError, res.StatusCode, errMsg)
 	}
 
 	return body, err
