@@ -20,7 +20,7 @@ type teamUsers struct {
 	Members []struct {
 		IsAdmin bool `json:"isAdmin"`
 		// There is aditional fields available no present in Account
-		Member Account `json:"member"`
+		Member ResponseAccount `json:"member"`
 	} `json:"members"`
 }
 
@@ -28,12 +28,12 @@ type teamUsers struct {
 func (c *Client) CreateTeam(ctx context.Context, orgID string, team Team) (Team, error) {
 	body, err := json.Marshal(team)
 	if err != nil {
-		return Team{}, fmt.Errorf("create team failed in MSR client: %w ", err)
+		return Team{}, fmt.Errorf("create team failed in MSR client: %w", err)
 	}
 	url := fmt.Sprintf("%s/%s/teams", c.createEnziUrl("accounts"), orgID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
-		return Team{}, fmt.Errorf("request creation failed in MSR client: %w ", err)
+		return Team{}, fmt.Errorf("request creation failed in MSR client: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
@@ -43,7 +43,7 @@ func (c *Client) CreateTeam(ctx context.Context, orgID string, team Team) (Team,
 	}
 
 	if err := json.Unmarshal(resBody, &team); err != nil {
-		return Team{}, fmt.Errorf("create a team failed in MSR client: %w ", err)
+		return Team{}, fmt.Errorf("create a team failed in MSR client: %w", err)
 	}
 
 	return team, nil
@@ -66,7 +66,7 @@ func (c *Client) ReadTeam(ctx context.Context, orgID string, teamID string) (Tea
 
 	team := Team{}
 	if err := json.Unmarshal(body, &team); err != nil {
-		return Team{}, fmt.Errorf("read team failed in MSR client: %w ", err)
+		return Team{}, fmt.Errorf("read team failed in MSR client: %w", err)
 	}
 
 	return team, nil
@@ -78,7 +78,7 @@ func (c *Client) UpdateTeam(ctx context.Context, orgID string, team Team) (Team,
 
 	body, err := json.Marshal(team)
 	if err != nil {
-		return Team{}, fmt.Errorf("update team failed in MSR client: %w ", err)
+		return Team{}, fmt.Errorf("update team failed in MSR client: %w", err)
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, bytes.NewBuffer(body))
 
@@ -95,7 +95,7 @@ func (c *Client) UpdateTeam(ctx context.Context, orgID string, team Team) (Team,
 	}
 
 	if json.Unmarshal(resBody, &team) != nil {
-		return Team{}, fmt.Errorf("update team failed in MSR client: %w ", err)
+		return Team{}, fmt.Errorf("update team failed in MSR client: %w", err)
 	}
 	return team, nil
 }
@@ -106,7 +106,7 @@ func (c *Client) DeleteTeam(ctx context.Context, orgID string, teamID string) er
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 
 	if err != nil {
-		return fmt.Errorf("delete team failed in MSR client: %w ", err)
+		return fmt.Errorf("delete team failed in MSR client: %w", err)
 	}
 
 	_, err = c.doRequest(req)
@@ -115,15 +115,15 @@ func (c *Client) DeleteTeam(ctx context.Context, orgID string, teamID string) er
 }
 
 // AddUserToTeam adds user to a team
-func (c *Client) AddUserToTeam(ctx context.Context, orgID string, teamID string, user Account) error {
+func (c *Client) AddUserToTeam(ctx context.Context, orgID string, teamID string, user ResponseAccount) error {
 	body, err := json.Marshal(map[string]bool{"isAdmin": user.IsAdmin})
 	if err != nil {
-		return fmt.Errorf("add user to team failed in MSR client: %w ", err)
+		return fmt.Errorf("add user to team failed in MSR client: %w", err)
 	}
 	endpoint := c.createEnziUrl(fmt.Sprintf("accounts/%s/teams/%s/members/%s", orgID, teamID, user.ID))
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, endpoint, bytes.NewBuffer(body))
 	if err != nil {
-		return fmt.Errorf("adding user to team failed in MSR client: %w ", err)
+		return fmt.Errorf("adding user to team failed in MSR client: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
@@ -140,10 +140,11 @@ func (c *Client) GetTeamUsers(ctx context.Context, orgID string, teamID string) 
 	endpoint := c.createEnziUrl(fmt.Sprintf("accounts/%s/teams/%s/members", orgID, teamID))
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		return teamUsers{}, fmt.Errorf("retrieving user of team failed in MSR client: %w ", err)
+		return teamUsers{}, fmt.Errorf("retrieving user of team failed in MSR client: %w", err)
 	}
 
 	resBody, err := c.doRequest(req)
+	fmt.Printf("Body %+v", string(resBody))
 	if err != nil {
 		return teamUsers{}, fmt.Errorf("retrieving user of team failed in MSR client: %w", err)
 	}
@@ -166,7 +167,7 @@ func (c *Client) DeleteUserFromTeam(ctx context.Context, orgID string, teamID st
 	endpoint := c.createEnziUrl(fmt.Sprintf("accounts/%s/teams/%s/members/%s", orgID, teamID, userID))
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, endpoint, nil)
 	if err != nil {
-		return fmt.Errorf("deleting user from team failed in MSR client: %w ", err)
+		return fmt.Errorf("deleting user from team failed in MSR client: %w", err)
 	}
 
 	if _, err := c.doRequest(req); err != nil {
@@ -190,7 +191,7 @@ func (c *Client) UpdateTeamUsers(ctx context.Context, orgID string, teamID strin
 	}
 
 	for _, u := range newUsers {
-		a := Account{
+		a := ResponseAccount{
 			ID: u.(string),
 		}
 		// Log the failure in the future if you fail to add an user to a team

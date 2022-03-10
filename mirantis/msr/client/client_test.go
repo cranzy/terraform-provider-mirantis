@@ -13,14 +13,14 @@ import (
 	"github.com/Mirantis/terraform-provider-mirantis/mirantis/msr/client"
 )
 
-type testStruct struct {
+type testClientStruct struct {
 	server           *httptest.Server
 	expectedResponse client.HealthResponse
 	expectedErr      error
 }
 
 func TestMSRClientHealthy(t *testing.T) {
-	tc := testStruct{
+	tc := testClientStruct{
 		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			if _, err := w.Write([]byte(`{"error": "", "healthy":true}`)); err != nil {
@@ -52,7 +52,7 @@ func TestMSRClientHealthy(t *testing.T) {
 func TestMSRClientUnhealthy(t *testing.T) {
 	unhealthyRes := client.HealthResponse{Healthy: false}
 	bodyRes, _ := json.Marshal(unhealthyRes)
-	tc := testStruct{
+	tc := testClientStruct{
 		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			if _, err := w.Write(bodyRes); err != nil {
@@ -71,10 +71,10 @@ func TestMSRClientUnhealthy(t *testing.T) {
 	ctx := context.Background()
 	isHealthy, err := testClient.IsHealthy(ctx)
 	if !reflect.DeepEqual(unhealthyRes.Healthy, isHealthy) {
-		t.Errorf("expected (%v), got (%v)", unhealthyRes.Healthy, isHealthy)
+		t.Errorf("expected (%v),\n got (%v)", unhealthyRes.Healthy, isHealthy)
 	}
-	if err != tc.expectedErr {
-		t.Errorf("expected (%v), got (%v)", tc.expectedErr, err)
+	if !errors.Is(err, tc.expectedErr) {
+		t.Errorf("expected (%v),\n got (%v)", tc.expectedErr, err)
 	}
 }
 
@@ -92,7 +92,7 @@ func TestMSRClientBadrequest(t *testing.T) {
 		t.Errorf("couldn't marshal struct %+v", resError)
 		return
 	}
-	tc := testStruct{
+	tc := testClientStruct{
 		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			if _, err := w.Write(bodyRes); err != nil {
@@ -103,16 +103,21 @@ func TestMSRClientBadrequest(t *testing.T) {
 		expectedResponse: client.HealthResponse{
 			Healthy: false,
 		},
-		expectedErr: errors.New("MSR API Error: response status is: 400. Bad request"),
+		expectedErr: client.ErrResponseError,
 	}
 
 	defer tc.server.Close()
 	testClient, err := client.NewClient(tc.server.URL, "fakeuser", "fakepass")
-	if !reflect.DeepEqual(testClient, client.Client{}) {
-		t.Errorf("expected (%v), got (%v)", client.Client{}, testClient)
+	if err != nil {
+		t.Fatal("Couldn't create Client")
 	}
-	if err.Error() != tc.expectedErr.Error() {
-		t.Errorf("expected (%v), got (%v)", tc.expectedErr, err)
+	ctx := context.Background()
+	healthy, err := testClient.IsHealthy(ctx)
+	if !reflect.DeepEqual(healthy, tc.expectedResponse.Healthy) {
+		t.Errorf("expected (%v),\n got (%v)", client.Client{}, testClient)
+	}
+	if !errors.Is(err, tc.expectedErr) {
+		t.Errorf("expected (%v),\n got (%v)", tc.expectedErr, err)
 	}
 }
 
@@ -130,7 +135,7 @@ func TestMSRClientUnauthorized(t *testing.T) {
 		t.Errorf("couldn't marshal struct %+v", resError)
 		return
 	}
-	tc := testStruct{
+	tc := testClientStruct{
 		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 			if _, err := w.Write(bodyRes); err != nil {
@@ -138,45 +143,59 @@ func TestMSRClientUnauthorized(t *testing.T) {
 				return
 			}
 		})),
-		expectedResponse: client.HealthResponse{},
-		expectedErr:      errors.New("MSR API Error: response status: 401. Unauthorized request"),
+		expectedResponse: client.HealthResponse{
+			Healthy: false,
+		},
+		expectedErr: client.ErrUnauthorizedReq,
 	}
 
 	defer tc.server.Close()
 	testClient, err := client.NewClient(tc.server.URL, "fakeuser", "fakepass")
-	if !reflect.DeepEqual(testClient, client.Client{}) {
-		t.Errorf("expected (%v), got (%v)", client.Client{}, testClient)
+	if err != nil {
+		t.Fatalf("Couldn't create client")
 	}
-	if err.Error() != tc.expectedErr.Error() {
-		t.Errorf("expected (%v), got (%v)", tc.expectedErr, err)
+	ctx := context.Background()
+	healthy, err := testClient.IsHealthy(ctx)
+	if !reflect.DeepEqual(healthy, tc.expectedResponse.Healthy) {
+		t.Errorf("expected (%v),\n got (%v)", client.Client{}, testClient)
+	}
+	if !errors.Is(err, tc.expectedErr) {
+		t.Errorf("expected (%v),\n got (%v)", tc.expectedErr, err)
 	}
 }
 
 func TestDoRequestWrongErrorStruct(t *testing.T) {
-	tc := testStruct{
+	tc := testClientStruct{
 		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
-			if _, err := w.Write([]byte(`{"msg": "wrong struct"}`)); err != nil {
+			if _, err := w.Write(nil); err != nil {
 				t.Error(err)
 				return
 			}
 		})),
-		expectedResponse: client.HealthResponse{},
-		expectedErr:      errors.New("MSR API Error: response status is: 400. Wrong unmarshal struct for {\"msg\": \"wrong struct\"}"),
+		expectedResponse: client.HealthResponse{
+			Healthy: false,
+		},
+		expectedErr: client.ErrUnmarshaling,
 	}
 
 	defer tc.server.Close()
 	testClient, err := client.NewClient(tc.server.URL, "fakeuser", "fakepass")
-	if !reflect.DeepEqual(testClient, client.Client{}) {
-		t.Errorf("expected (%v), got (%v)", client.Client{}, testClient)
+	if err != nil {
+		t.Fatalf("Couldn't create client")
 	}
-	if err.Error() != tc.expectedErr.Error() {
-		t.Errorf("expected (%v), got (%v)", tc.expectedErr, err)
+	ctx := context.Background()
+	healthy, err := testClient.IsHealthy(ctx)
+	if !reflect.DeepEqual(healthy, tc.expectedResponse.Healthy) {
+		t.Errorf("expected (%v),\n got (%v)", client.Client{}, testClient)
+	}
+	if !errors.Is(err, tc.expectedErr) {
+		t.Errorf("expected (%v),\n got (%v)", tc.expectedErr, err)
 	}
 }
 
 func TestDoRequestWrongErrorStructField(t *testing.T) {
-	tc := testStruct{
+	tc := testClientStruct{
 		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			if _, err := w.Write([]byte(`{"errors":[{"code":true, "message":"lol"}]}`)); err != nil {
@@ -185,21 +204,26 @@ func TestDoRequestWrongErrorStructField(t *testing.T) {
 			}
 		})),
 		expectedResponse: client.HealthResponse{},
-		expectedErr:      errors.New("MSR API Error: response status: 400. json: cannot unmarshal bool into Go struct field Errors.errors.code of type string"),
+		expectedErr:      client.ErrUnmarshaling,
 	}
 
 	defer tc.server.Close()
 	testClient, err := client.NewClient(tc.server.URL, "fakeuser", "fakepass")
-	if !reflect.DeepEqual(testClient, client.Client{}) {
-		t.Errorf("expected (%v), got (%v)", client.Client{}, testClient)
+	if err != nil {
+		t.Fatalf("Couldn't create client")
 	}
-	if err.Error() != tc.expectedErr.Error() {
-		t.Errorf("expected (%v), got (%v)", tc.expectedErr, err)
+	ctx := context.Background()
+	healthy, err := testClient.IsHealthy(ctx)
+	if !reflect.DeepEqual(healthy, tc.expectedResponse.Healthy) {
+		t.Errorf("expected (%v),\n got (%v)", client.Client{}, testClient)
+	}
+	if !errors.Is(err, tc.expectedErr) {
+		t.Errorf("expected (%v),\n got (%v)", tc.expectedErr, err)
 	}
 }
 
 func TestEmptyUsernameField(t *testing.T) {
-	tc := testStruct{
+	tc := testClientStruct{
 		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			if _, err := w.Write([]byte(`{ "msg": "ok"`)); err != nil {
@@ -208,7 +232,7 @@ func TestEmptyUsernameField(t *testing.T) {
 			}
 		})),
 		expectedResponse: client.HealthResponse{},
-		expectedErr:      errors.New("no username or password provided"),
+		expectedErr:      client.ErrEmptyUsernamePass,
 	}
 
 	defer tc.server.Close()
@@ -216,13 +240,13 @@ func TestEmptyUsernameField(t *testing.T) {
 	if !reflect.DeepEqual(testClient, client.Client{}) {
 		t.Errorf("expected (%v), got (%v)", client.Client{}, testClient)
 	}
-	if err.Error() != tc.expectedErr.Error() {
+	if !errors.Is(err, tc.expectedErr) {
 		t.Errorf("expected (%v), got (%v)", tc.expectedErr, err)
 	}
 }
 
 func TestEmptyPasswordField(t *testing.T) {
-	tc := testStruct{
+	tc := testClientStruct{
 		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			if _, err := w.Write([]byte(`{ "msg": "ok"`)); err != nil {
@@ -231,7 +255,7 @@ func TestEmptyPasswordField(t *testing.T) {
 			}
 		})),
 		expectedResponse: client.HealthResponse{},
-		expectedErr:      errors.New("no username or password provided"),
+		expectedErr:      client.ErrEmptyUsernamePass,
 	}
 
 	defer tc.server.Close()
@@ -239,7 +263,7 @@ func TestEmptyPasswordField(t *testing.T) {
 	if !reflect.DeepEqual(testClient, client.Client{}) {
 		t.Errorf("expected (%v), got (%v)", client.Client{}, testClient)
 	}
-	if err.Error() != tc.expectedErr.Error() {
+	if !errors.Is(err, tc.expectedErr) {
 		t.Errorf("expected (%v), got (%v)", tc.expectedErr, err)
 	}
 }

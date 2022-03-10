@@ -68,7 +68,7 @@ func resourceTeamCreate(ctx context.Context, d *schema.ResourceData, m interface
 	d.SetId(t.ID)
 
 	for _, id := range d.Get("user_ids").([]interface{}) {
-		u := client.Account{
+		u := client.ResponseAccount{
 			ID: id.(string),
 		}
 		if err := c.AddUserToTeam(ctx, d.Get("org_id").(string), t.ID, u); err != nil {
