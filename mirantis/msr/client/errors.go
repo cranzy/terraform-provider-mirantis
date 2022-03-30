@@ -11,4 +11,5 @@ var (
 	ErrResponseError     = errors.New("error - request returned ResponseError in MSR client")
 	ErrUnauthorizedReq   = errors.New("unauthorized request in MSR client")
 	ErrEmptyStruct       = errors.New("error - empty struct passed in MSR client")
+	ErrInvalidFilter     = errors.New("error - passing invalid account retrieval filter in MSR client")
 )

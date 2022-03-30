@@ -39,37 +39,32 @@ type ResponseAccount struct {
 	OnDemand     bool   `json:"onDemand"`
 	OtpEnabled   bool   `json:"otpEnabled"`
 	MembersCount int    `json:"membersCount"`
-	TeamscCount  int    `json:"teamsCount"`
+	TeamsCount   int    `json:"teamsCount"`
 }
 
 // Account filters enum
-type AccountFilter int64
+type AccountFilter string
 
 const (
-	Users AccountFilter = iota
-	Orgs
-	Admins
-	NonAdmins
-	ActiveUsers
-	InactiveUsers
+	Users         AccountFilter = "user"
+	Orgs          AccountFilter = "orgs"
+	Admins        AccountFilter = "admins"
+	NonAdmins     AccountFilter = "non-admins"
+	ActiveUsers   AccountFilter = "active-users"
+	InactiveUsers AccountFilter = "inactive-users"
 )
 
 // APIFormOfFilter is a string readable form of the AccountFilters enum
 func (accF AccountFilter) APIFormOfFilter() string {
-	switch accF {
-	case Users:
-		return "users"
-	case Orgs:
-		return "orgs"
-	case Admins:
-		return "admins"
-	case NonAdmins:
-		return "non-admins"
-	case ActiveUsers:
-		return "active-users"
-	case InactiveUsers:
-		return "inactive-users"
+	filters := [...]string{"users", "orgs", "admins", "non-admins", "active-users"}
+
+	x := string(accF)
+	for _, v := range filters {
+		if v == x {
+			return x
+		}
 	}
+
 	return "all"
 }
 
@@ -164,7 +159,7 @@ func (c *Client) UpdateAccount(ctx context.Context, id string, acc UpdateAccount
 	return resAcc, nil
 }
 
-// ReadAccount method retrieves all accounts depending on the filter passed from the enzi endpoint
+// ReadAccounts method retrieves all accounts depending on the filter passed from the enzi endpoint
 func (c *Client) ReadAccounts(ctx context.Context, accFilter AccountFilter) ([]ResponseAccount, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.createEnziUrl("accounts"), nil)
 	if err != nil {
