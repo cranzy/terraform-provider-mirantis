@@ -5,7 +5,7 @@ LOCAL_BIN_PATH?=./bin
 
 VERSION=0.9.0
 
-PROVIDERS?=msr
+PROVIDERS?=mcc msr
 ARCHES?=amd64 arm64
 OSES?=linux darwin
 
