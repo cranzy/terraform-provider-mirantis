@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	common "github.com/Mirantis/mcc/pkg/product/common/api"
@@ -126,6 +125,16 @@ func ResourceConfig() *schema.Resource {
 													Type:     schema.TypeInt,
 													Optional: true,
 												},
+												"use_https": {
+													Type:     schema.TypeBool,
+													Default:  true,
+													Optional: true,
+												},
+												"insecure": {
+													Type:     schema.TypeBool,
+													Default:  true,
+													Optional: true,
+												},
 											},
 										},
 									},
@@ -186,40 +195,16 @@ func ResourceConfig() *schema.Resource {
 						},
 						"install_flags": {
 							Type:     schema.TypeList,
+							Computed: true,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"san": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"default_node_orchestrator": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"nodeport_range": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						}, // install_flags
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"upgrade_flags": {
 							Type:     schema.TypeList,
+							Computed: true,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"force_recent_backup": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"force_minimums": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-								},
-							},
-						}, // upgrade_flags
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 					},
 				},
 			}, // mke
@@ -358,12 +343,17 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 			user := winrm["user"].(string)
 			password := winrm["password"].(string)
 			port := winrm["port"].(int)
+			useHTTPS := winrm["use_https"].(bool)
+			insecure := winrm["insecure"].(bool)
+
 			connection = k0s_rig.Connection{
 				WinRM: &k0s_rig.WinRM{
 					Address:  address,
 					Password: password,
 					User:     user,
 					Port:     port,
+					UseHTTPS: useHTTPS,
+					Insecure: insecure,
 				},
 			}
 		} else {
@@ -404,22 +394,24 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 	mkeImageRepo := mke["image_repo"].(string)
 	mkeVersion := mke["version"].(string)
 	// MKE's install flags
-	mkeInstallFlagsList := mke["install_flags"].([]interface{})[0]
-	mkeInstallFlags := mkeInstallFlagsList.(map[string]interface{})
-	mkeIFlags := flattenInstallFlags(mkeInstallFlags)
+	mkeInstallFlags := common.Flags{}
+	for _, f := range mke["install_flags"].([]interface{}) {
+		mkeInstallFlags.Add(f.(string))
+	}
 
 	// MKE's upgrade flags
-	mkeUpgradeFlagsList := mke["upgrade_flags"].([]interface{})[0]
-	mkeUpgradeFlags := mkeUpgradeFlagsList.(map[string]interface{})
-	mkeUFlags := flattenUpgradeFlags(mkeUpgradeFlags)
+	mkeUpgradeFlags := common.Flags{}
+	for _, f := range mke["upgrade_flags"].([]interface{}) {
+		mkeUpgradeFlags.Add(f.(string))
+	}
 
 	mkeConfig := mcc_api.MKEConfig{
 		AdminUsername: mkeAdminUser,
 		AdminPassword: mkeAdminPass,
 		ImageRepo:     mkeImageRepo,
 		Version:       mkeVersion,
-		InstallFlags:  mkeIFlags,
-		UpgradeFlags:  mkeUFlags,
+		InstallFlags:  mkeInstallFlags,
+		UpgradeFlags:  mkeUpgradeFlags,
 
 		Metadata: &mcc_api.MKEMetadata{},
 	}
@@ -468,26 +460,4 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 	}
 
 	return mcc_mke.MKE{ClusterConfig: clusterConfig}, nil
-}
-
-// Converts the terraform schema install flags to common.Flags
-func flattenInstallFlags(flagList map[string]interface{}) common.Flags {
-	flatFlags := common.Flags{}
-	for key, element := range flagList {
-		flag := strings.Replace(key, "_", "-", -1)
-		flatFlags.Add(fmt.Sprintf("--%s=%s", flag, element.(string)))
-	}
-	return flatFlags
-}
-
-// Converts the terraform schema upgrade flags to common.Flags
-func flattenUpgradeFlags(flagList map[string]interface{}) common.Flags {
-	flatFlags := common.Flags{}
-	for key, element := range flagList {
-		if element == true {
-			flag := strings.Replace(key, "_", "-", -1)
-			flatFlags.Add(fmt.Sprintf("--%s", flag))
-		}
-	}
-	return flatFlags
 }
