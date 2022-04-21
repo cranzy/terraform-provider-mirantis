@@ -161,7 +161,7 @@ func ResourceConfig() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"image_repo": {
+						"repo_url": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -375,14 +375,14 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 	mcrChannel := mcr["channel"].(string)
 	mcrInstallURLLinux := mcr["install_url_linux"].(string)
 	mcrInstallURLWindows := mcr["install_url_windows"].(string)
-	mcrImageRepo := mcr["image_repo"].(string)
+	mcrRepoURL := mcr["repo_url"].(string)
 	mcrVersion := mcr["version"].(string)
 
 	mccConfig := common.MCRConfig{
 		Version:           mcrVersion,
 		InstallURLLinux:   mcrInstallURLLinux,
 		InstallURLWindows: mcrInstallURLWindows,
-		RepoURL:           mcrImageRepo,
+		RepoURL:           mcrRepoURL,
 		Channel:           mcrChannel,
 	}
 
