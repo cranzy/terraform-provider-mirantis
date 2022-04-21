@@ -303,22 +303,29 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 		host := h.(map[string]interface{})
 		role := host["role"].(string)
 
-		hooksList := host["hooks"].([]interface{})[0]
-		hooks := hooksList.(map[string]interface{})
+		extractedHooks := common.Hooks{}
+		if len(host["hooks"].([]interface{})) > 0 {
+			hooksList := host["hooks"].([]interface{})[0]
+			hooks := hooksList.(map[string]interface{})
 
-		_beforeHooks := []string{}
-		for _, hook := range hooks["before"].([]interface{}) {
-			_beforeHooks = append(_beforeHooks, hook.(string))
-		}
-		_afterHooks := []string{}
-		for _, hook := range hooks["after"].([]interface{}) {
-			_afterHooks = append(_afterHooks, hook.(string))
-		}
-		extractedHooks := common.Hooks{
-			"apply": {
-				"before": _beforeHooks,
-				"after":  _afterHooks,
-			},
+			_beforeHooks := []string{}
+			if len(hooks["before"].([]interface{})) > 0 {
+				for _, hook := range hooks["before"].([]interface{}) {
+					_beforeHooks = append(_beforeHooks, hook.(string))
+				}
+			}
+			_afterHooks := []string{}
+			if len(hooks["after"].([]interface{})) > 0 {
+				for _, hook := range hooks["after"].([]interface{}) {
+					_afterHooks = append(_afterHooks, hook.(string))
+				}
+			}
+			extractedHooks = common.Hooks{
+				"apply": {
+					"before": _beforeHooks,
+					"after":  _afterHooks,
+				},
+			}
 		}
 		connection := k0s_rig.Connection{}
 		if len(host["ssh"].([]interface{})) > 0 {
@@ -395,14 +402,17 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 	mkeVersion := mke["version"].(string)
 	// MKE's install flags
 	mkeInstallFlags := common.Flags{}
-	for _, f := range mke["install_flags"].([]interface{}) {
-		mkeInstallFlags.Add(f.(string))
+	if len(mke["install_flags"].([]interface{})) > 0 {
+		for _, f := range mke["install_flags"].([]interface{}) {
+			mkeInstallFlags.Add(f.(string))
+		}
 	}
-
 	// MKE's upgrade flags
 	mkeUpgradeFlags := common.Flags{}
-	for _, f := range mke["upgrade_flags"].([]interface{}) {
-		mkeUpgradeFlags.Add(f.(string))
+	if len(mke["upgrade_flags"].([]interface{})) > 0 {
+		for _, f := range mke["upgrade_flags"].([]interface{}) {
+			mkeUpgradeFlags.Add(f.(string))
+		}
 	}
 
 	mkeConfig := mcc_api.MKEConfig{
@@ -427,8 +437,10 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 		replica_ids := msr["replica_ids"].(string)
 
 		extractedInstallFlags := common.Flags{}
-		for _, flag := range msr["install_flags"].([]interface{}) {
-			extractedInstallFlags.Add(flag.(string))
+		if len(msr["install_flags"].([]interface{})) > 0 {
+			for _, flag := range msr["install_flags"].([]interface{}) {
+				extractedInstallFlags.Add(flag.(string))
+			}
 		}
 
 		tempMSRConfig.Version = version
