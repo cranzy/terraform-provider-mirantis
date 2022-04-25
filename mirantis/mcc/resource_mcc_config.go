@@ -27,6 +27,11 @@ func ResourceConfig() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"metadata": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -245,20 +250,23 @@ func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	mkeClient.Apply(false, false, 10)
+	if err := mkeClient.Apply(false, false, 10); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if err := d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(strconv.FormatInt(time.Now().Unix(), 10))
 
-	return diag.FromErr(nil)
+	return nil
 }
 
 func resourceConfigRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// always run
 	d.SetId(strconv.FormatInt(time.Now().Unix(), 10))
 
-	return diag.FromErr(nil)
+	return nil
 }
 
 func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -270,14 +278,25 @@ func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 }
 
 func resourceConfigDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	mkeClient, err := flattenInputConfigModel(d)
-	if err != nil {
-		return diag.FromErr(err)
+	skip_destroy := d.Get("skip_destroy").(bool)
+	if !skip_destroy {
+		mkeClient, err := flattenInputConfigModel(d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if err != mkeClient.Reset() {
+			return diag.FromErr(err)
+		}
+		return nil
+	} else {
+		var diags diag.Diagnostics
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "MKE cluster destruction was skipped!",
+		})
+
+		return diags
 	}
-	if err != mkeClient.Reset() {
-		return diag.FromErr(err)
-	}
-	return diag.FromErr(nil)
 }
 
 func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
