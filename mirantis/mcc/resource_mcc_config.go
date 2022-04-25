@@ -141,98 +141,98 @@ func ResourceConfig() *schema.Resource {
 								}, // winrm
 							},
 						}, // hosts
+						"mcr": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"channel": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"install_url_linux": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"install_url_windows": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"repo_url": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"version": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						}, // mcr
+						"mke": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"admin_password": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"admin_username": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"image_repo": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"version": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"install_flags": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"upgrade_flags": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						}, // mke
+						"msr": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"image_repo": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"version": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"replica_ids": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"install_flags": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						}, // msr
 					},
 				},
 			}, // spec
-			"mcr": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"channel": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"install_url_linux": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"install_url_windows": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"repo_url": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"version": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			}, // mcr
-			"mke": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"admin_password": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"admin_username": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"image_repo": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"version": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"install_flags": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"upgrade_flags": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			}, // mke
-			"msr": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"image_repo": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"version": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"replica_ids": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"install_flags": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			}, // msr
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -377,7 +377,7 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 	}
 
 	// parse mcr config
-	mcrList := d.Get("mcr").([]interface{})[0]
+	mcrList := spec["mcr"].([]interface{})[0]
 	mcr := mcrList.(map[string]interface{})
 	mcrChannel := mcr["channel"].(string)
 	mcrInstallURLLinux := mcr["install_url_linux"].(string)
@@ -394,7 +394,7 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 	}
 
 	// parse MKE's flags
-	mkeList := d.Get("mke").([]interface{})[0]
+	mkeList := spec["mke"].([]interface{})[0]
 	mke := mkeList.(map[string]interface{})
 	mkeAdminUser := mke["admin_username"].(string)
 	mkeAdminPass := mke["admin_password"].(string)
@@ -428,9 +428,9 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 
 	var msrConfig *mcc_api.MSRConfig
 	// parse MSR's flags
-	if _, ok := d.GetOk("msr"); ok {
+	if len(spec["msr"].([]interface{})) > 0 {
 		tempMSRConfig := mcc_api.MSRConfig{}
-		msrList := d.Get("msr").([]interface{})[0]
+		msrList := spec["msr"].([]interface{})[0]
 		msr := msrList.(map[string]interface{})
 		version := msr["version"].(string)
 		image_repo := msr["image_repo"].(string)
