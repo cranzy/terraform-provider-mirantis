@@ -1,10 +1,13 @@
 package mcc
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	common "github.com/Mirantis/mcc/pkg/product/common/api"
 	mcc_mke "github.com/Mirantis/mcc/pkg/product/mke"
@@ -250,8 +253,12 @@ func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	logrusBuffer := &bytes.Buffer{}
+	logrus.SetOutput(logrusBuffer)
+
 	if err := mkeClient.Apply(false, false, 10); err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%w; %s", err, logrusBuffer.String()))
 	}
 
 	if err := d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
@@ -280,12 +287,15 @@ func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 func resourceConfigDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	skip_destroy := d.Get("skip_destroy").(bool)
 	if !skip_destroy {
+		logrusBuffer := &bytes.Buffer{}
+		logrus.SetOutput(logrusBuffer)
+
 		mkeClient, err := flattenInputConfigModel(d)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if err != mkeClient.Reset() {
-			return diag.FromErr(err)
+		if err != mkeClient.Reset(); err != nil {
+			return diag.FromErr(fmt.Errorf("%w; %s", err, logrusBuffer.String())
 		}
 		return nil
 	} else {
