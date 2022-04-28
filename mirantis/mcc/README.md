@@ -33,26 +33,26 @@ This section will explain the terraform schema for the MCC terraform provider.
       - `hooks`: These are commands(terminal commands) which can be executed *before* or *after* the provisioning of a host
       - `role`: The role of the host, so that Launchpad knows where to install the appropriate software (MKE, MSR). These roles can be one of the following: *manager*, *worker*, *msr*.
 
--`mcr`: The terraform block for the MCR product containing all the required attributes for the installation.
-  - `channel`: The type of engine channel to use.
-  - `install_url_linux`: The engine install script location for linux
-  - `install_url_windows`: The engine install script location for windows
-  - `image_repo`: The engine repo where to pull the install script from
-  - `version`: The engine version to install
+  -`mcr`: The terraform block for the MCR product containing all the required attributes for the installation.
+    - `channel`: The type of engine channel to use.
+    - `install_url_linux`: The engine install script location for linux
+    - `install_url_windows`: The engine install script location for windows
+    - `image_repo`: The engine repo where to pull the install script from
+    - `version`: The engine version to install
 
--`mke`: The terraform block for the MKE product containing all the required attributes for the installation.
-- `admin_username`: MKE's admin username
-- `admin_password`:  MKE's admin password
-- `version`: MKE version to install
-- `image_repo`: Where to pull the MKE installation images
-- `install_flags`: The MKE flags that you can set for the MKE installation, i.e. san, orchestrator, etc.
-- `upgrade_flags`: Upgrade flags which are used on performing MKE upgrade
+  -`mke`: The terraform block for the MKE product containing all the required attributes for the installation.
+  - `admin_username`: MKE's admin username
+  - `admin_password`:  MKE's admin password
+  - `version`: MKE version to install
+  - `image_repo`: Where to pull the MKE installation images
+  - `install_flags`: The MKE flags that you can set for the MKE installation, i.e. san, orchestrator, etc.
+  - `upgrade_flags`: Upgrade flags which are used on performing MKE upgrade
 
--`msr`: The terraform block for the MSR product containing all the required attributes for the installation.
-- `image_repo`: The repository where to pull the MSR installation images
-- `version`: Which MSR version to be installed
-- `replica_ids`: Used to identify the *type* of assigning that MSR does on its hosts. MSR finds the highest replica id and assigns sequential ones starting from that to all the hosts without replica ids.
-- `install_flags`: A list of the installation flags used when performing MSR installation.
+  -`msr`: The terraform block for the MSR product containing all the required attributes for the installation.
+  - `image_repo`: The repository where to pull the MSR installation images
+  - `version`: Which MSR version to be installed
+  - `replica_ids`: Used to identify the *type* of assigning that MSR does on its hosts. MSR finds the highest replica id and assigns sequential ones starting from that to all the hosts without replica ids.
+  - `install_flags`: A list of the installation flags used when performing MSR installation.
 
 ## Usage
 This section will show you how to import the MCC terraform provider
