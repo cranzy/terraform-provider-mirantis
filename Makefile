@@ -2,6 +2,9 @@ TERRAFORM_PROVIDER_ROOT=mirantis.com/providers
 BINARY_ROOT=terraform-provider
 INSTALL_ROOT?=$(HOME)/.terraform.d/plugins
 LOCAL_BIN_PATH?=./bin
+CUR_DIR=$(shell echo "${PWD}")
+TEST_TF_CHART_ROOT?=${CUR_DIR}/test/launchpad
+TF_LOCK_FILE?=${TEST_TF_CHART_ROOT}/.terraform.lock.hcl
 
 VERSION=0.9.0
 
@@ -13,10 +16,12 @@ GO=$(shell which go)
 
 default: install
 
+.PHONY: clean
 clean:
 	rm -rf "$(LOCAL_BIN_PATH)"
 	rm -rf "$(INSTALL_ROOT)/$(TERRAFORM_PROVIDER_ROOT)"
 
+.PHONY: build
 build:
 	mkdir -p $(LOCAL_BIN_PATH)
 	for PROVIDER in $(PROVIDERS); do \
@@ -27,9 +32,11 @@ build:
 		done; \
 	done;
 
+.PHONY: release
 release:
 	goreleaser release --rm-dist --snapshot --skip-publish  --skip-sign
 
+.PHONY: install
 install: build
 	for PROVIDER in $(PROVIDERS); do \
 		for OS in $(OSES); do \
@@ -40,11 +47,21 @@ install: build
 		done; \
 	done;
 
+.PHONY: test-unit
+test-unit:
+	go test -v ./...
 
-test:
-	go test -i ./...
-
+.PHONY: testacc
 testacc:
 	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
 
-.PHONY: clean build install test testacc
+.PHONY: test-acceptance
+test-acceptance: clean build install test-unit
+	rm -f ${TF_LOCK_FILE}
+	terraform -chdir=${TEST_TF_CHART_ROOT} init
+	terraform -chdir=${TEST_TF_CHART_ROOT} apply -auto-approve
+	terraform -chdir=${TEST_TF_CHART_ROOT} destroy -auto-approve
+
+.PHONY: tf-destroy
+tf-destroy:
+	terraform -chdir=${TEST_TF_CHART_ROOT} destroy -auto-approve

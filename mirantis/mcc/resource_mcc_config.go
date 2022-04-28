@@ -448,6 +448,9 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 	var msrConfig *mcc_api.MSRConfig
 	// parse MSR's flags
 	if len(spec["msr"].([]interface{})) > 0 {
+		if err := validateMSRHost(hosts); err != nil {
+			return mcc_mke.MKE{}, err
+		}
 		tempMSRConfig := mcc_api.MSRConfig{}
 		msrList := spec["msr"].([]interface{})[0]
 		msr := msrList.(map[string]interface{})
@@ -491,4 +494,18 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 	}
 
 	return mcc_mke.MKE{ClusterConfig: clusterConfig}, nil
+}
+
+// Validates that there are MSR hosts present when we have MSR attribute specified.
+func validateMSRHost(hosts mcc_api.Hosts) error {
+	MSRHostPresent := false
+	for _, h := range hosts {
+		if h.Role == "msr" {
+			MSRHostPresent = true
+		}
+	}
+	if !MSRHostPresent {
+		return fmt.Errorf("no MSR hosts present - but MSR attribute provided")
+	}
+	return nil
 }
