@@ -294,8 +294,8 @@ func resourceConfigDelete(ctx context.Context, d *schema.ResourceData, m interfa
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if err != mkeClient.Reset(); err != nil {
-			return diag.FromErr(fmt.Errorf("%w; %s", err, logrusBuffer.String())
+		if err := mkeClient.Reset(); err != nil {
+			return diag.FromErr(fmt.Errorf("%w; %s", err, logrusBuffer.String()))
 		}
 		return nil
 	} else {
