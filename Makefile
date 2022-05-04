@@ -7,7 +7,7 @@ TF_LOCK_FILE?=${TEST_TF_CHART_ROOT}/.terraform.lock.hcl
 
 VERSION=0.9.0
 
-PROVIDERS?=mcc msr
+PROVIDERS?=mcc msr mke
 ARCHES?=amd64 arm64
 OSES?=linux darwin
 
@@ -48,7 +48,7 @@ install: build
 
 .PHONY: test-unit
 test-unit:
-	go test -v ./...
+	go test -v -cover ./...
 
 .PHONY: testacc
 testacc:
