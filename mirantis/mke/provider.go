@@ -29,9 +29,8 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("MKE_PASS", nil),
 			},
 		},
-		ResourcesMap: map[string]*schema.Resource{},
-		DataSourcesMap: map[string]*schema.Resource{
-			"mke_clientbundle": dataSourceClientBundle(),
+		ResourcesMap: map[string]*schema.Resource{
+			"mke_clientbundle": ResourceClientBundle(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
