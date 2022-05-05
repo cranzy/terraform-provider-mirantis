@@ -1,6 +1,7 @@
 package client_test
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/Mirantis/terraform-provider-mirantis/mirantis/mke/client"
@@ -36,7 +37,8 @@ users:
 )
 
 func TestClientBundleFromKubeYmlGood(t *testing.T) {
-	cbk, err := client.NewClientBundleKubeFromKubeYml([]byte(GoodKubeYml))
+	buf := bytes.NewBuffer([]byte(GoodKubeYml))
+	cbk, err := client.NewClientBundleKubeFromKubeYml(buf)
 	if err != nil {
 		t.Fatalf("Error converting Kube CB from yaml: %s", err)
 	}
