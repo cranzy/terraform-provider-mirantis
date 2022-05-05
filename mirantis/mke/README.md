@@ -20,24 +20,32 @@ provider "mke" {
 }
 ```
 
-### Data sources
+### Resources
 
 #### ClientBundle
 
-This Data Source retrieves a new client bundle from MKE.
+This resource retrieves a new client bundle from MKE.
 
-The data source aims to provide sufficient information to allow configuration
+The resource aims to provide sufficient information to allow configuration
 of other providers such as the `kubernetes` provides.
 
 ```
-data "mke_clientbundle" "admin" {}
-
-provider "kubernetes" {
-	host                   = data.mke_clientbundle.admin.kube[0].host
-	client_certificate     = data.mke_clientbundle.admin.kube[0].client_cert
-	client_key             = data.mke_clientbundle.admin.kube[0].client_key
-	cluster_ca_certificate = data.mke_clientbundle.admin.kube[0].ca_certificate
+resource "mke_clientbundle" "admin" {
+	name = "admin" # this actually doesn't do anything, but TF needs at least one attribute.
 }
 ```
 
-The data source is still under development, and can be considered naive.
+This will give you enough data to configure some other providers such as kubernetes:
+
+```
+provider "kubernetes" {
+	host                   = resource.mke_clientbundle.admin.kube[0].host
+	client_certificate     = resource.mke_clientbundle.admin.kube[0].client_cert
+	client_key             = resource.mke_clientbundle.admin.kube[0].client_key
+	cluster_ca_certificate = resource.mke_clientbundle.admin.kube[0].ca_certificate
+}
+```
+
+The resource is still under development, and can be considered naive:
+
+# It doesn`t delete the client bundle, as it is not clear how to identify the key

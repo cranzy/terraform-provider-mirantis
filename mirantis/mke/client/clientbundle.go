@@ -2,19 +2,27 @@ package client
 
 import (
 	"encoding/base64"
+	"io"
+	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
 )
 
 // ClientBundle interpretation of the ClientBundle data in memory
 type ClientBundle struct {
-	Kube *ClientBundleKube `json:"kube"`
+	ID         string            `json:"id"`
+	PrivateKey string            `json:"private_key"`
+	PublicKey  string            `json:"public_key"`
+	Certs      []string          `json:"certs"`
+	CACert     string            `json:"ca_cert"`
+	Kube       *ClientBundleKube `json:"kube"`
 }
 
 // ClientBundleKube Kubernetes parts of the client bundle
 // primarily we are focused on satisfying requirements for a kubernetes provider
 // such as https://github.com/hashicorp/terraform-provider-kubernetes/blob/main/kubernetes/provider.go
 type ClientBundleKube struct {
+	Config            string `json:"config"`
 	Host              string `json:"host"`
 	ClientKey         string `json:"client_key"`
 	ClientCertificate string `json:"client_certificate"`
@@ -22,8 +30,28 @@ type ClientBundleKube struct {
 	Insecure          string `json:"insecure"`
 }
 
+// ClientBundleRetrieveValue read a value
+func ClientBundleRetrieveValue(val io.Reader) (string, error) {
+	allBytes, err := ioutil.ReadAll(val)
+	if err != nil {
+		return "", err
+	}
+	return string(allBytes), nil
+}
+
+// ClientBundleDecodeBase64Value read a value and base64 decode it
+func ClientBundleDecodeBase64Value(val io.Reader) (string, error) {
+	allBytes, err := ioutil.ReadAll(val)
+	if err != nil {
+		return "", err
+	}
+	return helperStringBase64Decode(string(allBytes)), nil
+}
+
 // NewClientBundleKubeFromKubeYml ClientBundleKube constructor from byte list of a kubeconfig file
-func NewClientBundleKubeFromKubeYml(config []byte) (ClientBundleKube, error) {
+func NewClientBundleKubeFromKubeYml(val io.Reader) (ClientBundleKube, error) {
+	k8bytes, _ := ioutil.ReadAll(val)
+
 	var cbk ClientBundleKube
 
 	// Struct representation of a kube config file.
@@ -56,7 +84,9 @@ func NewClientBundleKubeFromKubeYml(config []byte) (ClientBundleKube, error) {
 		} `yaml:"users"`
 	}
 
-	if err := yaml.UnmarshalStrict(config, &cbkHolder); err != nil {
+	cbk.Config = string(k8bytes)
+
+	if err := yaml.UnmarshalStrict(k8bytes, &cbkHolder); err != nil {
 		return cbk, err
 	}
 
