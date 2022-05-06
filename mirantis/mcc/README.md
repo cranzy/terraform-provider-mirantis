@@ -23,15 +23,17 @@ The MCC terraform provider directly imports the Launchpad code, therefore the te
 
 This section will explain the terraform schema for the MCC terraform provider.
 
-- `spec`: A terraform block containing *cluster* and *hosts* attributes.
+- `spec`: A terraform block containing *cluster* and *host* attributes.
+
   - `cluster`: Containing general cluster flags - like *prune*
     - `prune`: Removes hosts(nodes) which are not part of the spec
-  - `hosts`: The list of hosts(nodes) which will be in the MKE cluster. Each of those hosts should have *role* and *connection* block(either *ssh* or *winrm*)
+
+  - `host`: Each is a node which will be in the MKE cluster. Each of those hosts should have *role* and *connection* block(either *ssh* or *winrm*)
     -  `ssh` or `winrm`: Method for Launchpad to connect to the remote hosts. Depending on the host type(Linux vs Windows). The below attributes are required for the remote conection.
       - `ssh`: Connection block for Linux hosts. Contains host *ip*, pem file *key_path*, ssh *user*
       - `winrm`: Connection block for Windows hosts. Contains host ip   *address*, *user*, *password*, *port*.
       - `hooks`: These are commands(terminal commands) which can be executed *before* or *after* the provisioning of a host
-      - `role`: The role of the host, so that Launchpad knows where to install the appropriate software (MKE, MSR). These roles can be one of the following: *manager*, *worker*, *msr*.
+    - `role`: The role of the host, so that Launchpad knows where to install the appropriate software (MKE, MSR). These roles can be one of the following: *manager*, *worker*, *msr*.
 
   -`mcr`: The terraform block for the MCR product containing all the required attributes for the installation.
     - `channel`: The type of engine channel to use.
@@ -48,7 +50,7 @@ This section will explain the terraform schema for the MCC terraform provider.
   - `install_flags`: The MKE flags that you can set for the MKE installation, i.e. san, orchestrator, etc.
   - `upgrade_flags`: Upgrade flags which are used on performing MKE upgrade
 
-  -`msr`: The terraform block for the MSR product containing all the required attributes for the installation.
+  -`msr`: The optional terraform block for the MSR product containing all the required attributes for the installation.
   - `image_repo`: The repository where to pull the MSR installation images
   - `version`: Which MSR version to be installed
   - `replica_ids`: Used to identify the *type* of assigning that MSR does on its hosts. MSR finds the highest replica id and assigns sequential ones starting from that to all the hosts without replica ids.
