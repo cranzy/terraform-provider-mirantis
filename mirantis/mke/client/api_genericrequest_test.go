@@ -23,8 +23,8 @@ func TestGoodGenericRequest(t *testing.T) {
 		mockRequest: MockServerHandlerGeneratorReturnBytes(expectedRespBodyBytes),
 	})
 
-	url, _ := url.Parse(svr.URL)
-	c, err := client.NewClient(url, nil, svr.Client())
+	u, _ := url.Parse(svr.URL)
+	c, err := client.NewClient(u, nil, svr.Client())
 	if err != nil {
 		t.Fatalf("Could not make a client: %s", err)
 	}

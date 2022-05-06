@@ -22,8 +22,8 @@ func TestGoodAuthRequest(t *testing.T) {
 
 	svr := MockTestServer(&srvAuth, MockHandlerMap{})
 
-	url, _ := url.Parse(svr.URL)
-	c, err := client.NewClient(url, &clAuth, svr.Client())
+	u, _ := url.Parse(svr.URL)
+	c, err := client.NewClient(u, &clAuth, svr.Client())
 	if err != nil {
 		t.Fatalf("Could not make a client: %s", err)
 	}

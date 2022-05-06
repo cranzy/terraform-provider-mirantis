@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -30,17 +31,19 @@ func (c *Client) doRequest(req *http.Request) (*Response, error) {
 	}
 
 	if res.StatusCode >= http.StatusBadRequest {
+		b, _ := ioutil.ReadAll(res.Body)
+
 		if res.StatusCode == http.StatusUnauthorized {
-			return res, fmt.Errorf("%w: Unauthorized: %d", ErrUnauthorizedReq, res.StatusCode)
+			return res, fmt.Errorf("%w: Unauthorized: %d : %s", ErrUnauthorizedReq, res.StatusCode, b)
 		}
 		if res.StatusCode == http.StatusNotFound {
-			return res, fmt.Errorf("%w: Not Found: %d", ErrUnknownTarget, res.StatusCode)
+			return res, fmt.Errorf("%w: Not Found: %d : %s", ErrUnknownTarget, res.StatusCode, b)
 		}
 		if res.StatusCode == http.StatusInternalServerError {
-			return res, fmt.Errorf("%w: Server Error: %d", ErrServerError, res.StatusCode)
+			return res, fmt.Errorf("%w: Server Error: %d : %s", ErrServerError, res.StatusCode, b)
 		}
 
-		return res, fmt.Errorf("%w: Status code: %d", ErrResponseError, res.StatusCode)
+		return res, fmt.Errorf("%w: Status code: %d : %s", ErrResponseError, res.StatusCode, b)
 	}
 
 	return res, nil

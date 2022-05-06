@@ -2,12 +2,18 @@ package client
 
 import (
 	"crypto/tls"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 )
 
 const (
 	EndpointDefaultScheme = "https"
+)
+
+var (
+	ErrCouldNotCreateClient = errors.New("Could not create a client")
 )
 
 // Client MSR client
@@ -41,14 +47,17 @@ func NewUnsafeSSLClient(endpoint, username, password string) (Client, error) {
 
 	apiURL, err := url.Parse(endpoint)
 	if err != nil {
-		return Client{}, err
+		return Client{}, fmt.Errorf("%w; %s; empty endpoint", ErrCouldNotCreateClient, err)
 	}
 
 	return NewClient(apiURL, &auth, HTTPClient)
 }
 
-// NewUnsafeSSLClient creates a new MKE API Client that ignores unsafe SSL
+// NewClient creates a new MKE API Client from raw components
 func NewClient(apiURL *url.URL, auth *Auth, HTTPClient *http.Client) (Client, error) {
+	if apiURL == nil {
+		return Client{}, fmt.Errorf("%w; empty endpoint", ErrCouldNotCreateClient)
+	}
 	return Client{
 		apiURL:     apiURL,
 		HTTPClient: HTTPClient,
@@ -61,8 +70,22 @@ func (c *Client) reqURLFromTarget(target string) string {
 	// target should be a relative path, and will be treated as a relative reference
 	// to the client URL
 	// @see https://pkg.go.dev/net/url#URL.ResolveReference
-	targetURL, _ := url.Parse(target)
+	if c == nil {
+		panic("Tried to generate relative URL from a client, but the client was nil")
+	}
+	if c.apiURL == nil {
+		panic("Tried to generate relative URL from a client, but the client URL was nil")
+	}
+	targetURL, err := url.Parse(target)
+	if err != nil {
+		panic(fmt.Errorf("Tried to generate relative URL from a client: %s", err))
+	}
 	relativeURL := c.apiURL.ResolveReference(targetURL)
 
 	return relativeURL.String()
+}
+
+// Username retrieve username string for auth, so that we don't expose the whole auth struct
+func (c *Client) Username() string {
+	return c.auth.Username
 }
