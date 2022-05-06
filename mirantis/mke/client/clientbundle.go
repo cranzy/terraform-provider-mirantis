@@ -13,7 +13,7 @@ type ClientBundle struct {
 	ID         string            `json:"id"`
 	PrivateKey string            `json:"private_key"`
 	PublicKey  string            `json:"public_key"`
-	Certs      []string          `json:"certs"`
+	Cert       string            `json:"cert"`
 	CACert     string            `json:"ca_cert"`
 	Kube       *ClientBundleKube `json:"kube"`
 }

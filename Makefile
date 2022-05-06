@@ -50,8 +50,20 @@ install: build
 test-unit:
 	go test -v -cover ./...
 
-.PHONY: testacc
-testacc:
+.PHONY: test-integration
+test-integration:
+	# Running integration tests.
+	#
+	# You need the following env variables:
+	# -> MKE integration tests:
+	#  MKE_HOST
+	#  MKE_USERNAME
+	#  MKE_PASSWORD
+	#
+	go test -v -cover --tags=integration ./...
+
+.PHONY: test-acc
+test-acc:
 	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
 
 .PHONY: test-acceptance
