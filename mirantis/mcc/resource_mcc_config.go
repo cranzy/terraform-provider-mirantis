@@ -67,7 +67,7 @@ func ResourceConfig() *schema.Resource {
 								},
 							},
 						},
-						"hosts": {
+						"host": {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Resource{

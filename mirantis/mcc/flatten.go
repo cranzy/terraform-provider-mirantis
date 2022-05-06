@@ -25,7 +25,7 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 
 	// parse spec's hosts info from Terraform config
 	hosts := mcc_api.Hosts{}
-	for _, h := range spec["hosts"].([]interface{}) {
+	for _, h := range spec["host"].([]interface{}) {
 		host := h.(map[string]interface{})
 		role := host["role"].(string)
 
