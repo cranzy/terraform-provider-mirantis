@@ -32,6 +32,7 @@ func Provider() *schema.Provider {
 			"msr_user": ResourceUser(),
 			"msr_org":  ResourceOrg(),
 			"msr_team": ResourceTeam(),
+			"msr_repo": ResourceRepo(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"msr_accounts": dataSourceAccounts(),
