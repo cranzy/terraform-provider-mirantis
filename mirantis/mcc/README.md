@@ -35,26 +35,26 @@ This section will explain the terraform schema for the MCC terraform provider.
       - `hooks`: These are commands(terminal commands) which can be executed *before* or *after* the provisioning of a host
     - `role`: The role of the host, so that Launchpad knows where to install the appropriate software (MKE, MSR). These roles can be one of the following: *manager*, *worker*, *msr*.
 
-  -`mcr`: The terraform block for the MCR product containing all the required attributes for the installation.
+  - `mcr`: The terraform block for the MCR product containing all the required attributes for the installation.
     - `channel`: The type of engine channel to use.
     - `install_url_linux`: The engine install script location for linux
     - `install_url_windows`: The engine install script location for windows
     - `image_repo`: The engine repo where to pull the install script from
     - `version`: The engine version to install
 
-  -`mke`: The terraform block for the MKE product containing all the required attributes for the installation.
-  - `admin_username`: MKE's admin username
-  - `admin_password`:  MKE's admin password
-  - `version`: MKE version to install
-  - `image_repo`: Where to pull the MKE installation images
-  - `install_flags`: The MKE flags that you can set for the MKE installation, i.e. san, orchestrator, etc.
-  - `upgrade_flags`: Upgrade flags which are used on performing MKE upgrade
+  - `mke`: The terraform block for the MKE product containing all the required attributes for the installation.
+    - `admin_username`: MKE's admin username
+    - `admin_password`:  MKE's admin password
+    - `version`: MKE version to install
+    - `image_repo`: Where to pull the MKE installation images
+    - `install_flags`: The MKE flags that you can set for the MKE installation, i.e. san, orchestrator, etc.
+    - `upgrade_flags`: Upgrade flags which are used on performing MKE upgrade
 
-  -`msr`: The optional terraform block for the MSR product containing all the required attributes for the installation.
-  - `image_repo`: The repository where to pull the MSR installation images
-  - `version`: Which MSR version to be installed
-  - `replica_ids`: Used to identify the *type* of assigning that MSR does on its hosts. MSR finds the highest replica id and assigns sequential ones starting from that to all the hosts without replica ids.
-  - `install_flags`: A list of the installation flags used when performing MSR installation.
+  - `msr`: The optional terraform block for the MSR product containing all the required attributes for the installation.
+    - `image_repo`: The repository where to pull the MSR installation images
+    - `version`: Which MSR version to be installed
+    - `replica_ids`: Used to identify the *type* of assigning that MSR does on its hosts. MSR finds the highest replica id and assigns sequential ones starting from that to all the hosts without replica ids.
+    - `install_flags`: A list of the installation flags used when performing MSR installation.
 
 ## Usage
 This section will show you how to import the MCC terraform provider
@@ -168,31 +168,31 @@ resource "mcc_config" "main" {
       }
     }
 
+    mcr {
+      channel = "stable"
+      install_url_linux = "https://get.mirantis.com/"
+      install_url_windows = "https://get.mirantis.com/install.ps1"
+      image_repo = "https://repos.mirantis.com"
+      version = "20.10.9"
+    } // mcr
+
+    mke {
+      admin_password = "password"
+      admin_username = "admin"
+      image_repo = "docker.io/mirantis"
+      version = var.mke_version
+      install_flags = ["--san=${module.elb_mke.lb_dns_name}", "--default-node-orchestrator=kubernetes", "--nodeport-range=32768-35535"]
+      upgrade_flags = ["--force-recent-backup", "--force-minimums"]
+    } // mke
+
+    msr {
+      image_repo = "docker.io/mirantis"
+      version = "2.8.6"
+      replica_ids = "sequential"
+      install_flags = local.msr_install_flags
+    } // msr
+
   } // spec
-
-  mcr {
-    channel = "stable"
-    install_url_linux = "https://get.mirantis.com/"
-    install_url_windows = "https://get.mirantis.com/install.ps1"
-    image_repo = "https://repos.mirantis.com"
-    version = "20.10.9"
-  } // mcr
-
-  mke {
-    admin_password = "password"
-    admin_username = "admin"
-    image_repo = "docker.io/mirantis"
-    version = var.mke_version
-    install_flags = ["--san=${module.elb_mke.lb_dns_name}", "--default-node-orchestrator=kubernetes", "--nodeport-range=32768-35535"]
-    upgrade_flags = ["--force-recent-backup", "--force-minimums"]
-  } // mke
-
-  msr {
-    image_repo = "docker.io/mirantis"
-    version = "2.8.6"
-    replica_ids = "sequential"
-    install_flags = local.msr_install_flags
-  } // msr
 }
 ```
 

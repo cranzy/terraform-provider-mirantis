@@ -13,19 +13,25 @@ func Provider() *schema.Provider {
 		Schema: map[string]*schema.Schema{
 			"host": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("MSR_HOST_URL", nil),
 			},
 			"username": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("MSR_ADMIN_USER", nil),
 			},
 			"password": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("MSR_ADMIN_PASS", nil),
+			},
+			"unsafe_ssl_client": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				DefaultFunc: schema.EnvDefaultFunc("MSR_UNSAFE_CLIENT", nil),
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -44,47 +50,37 @@ func Provider() *schema.Provider {
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
-
-	var host string
-
-	hVal, ok := d.GetOk("host")
-	if ok {
-		tempHost := hVal.(string)
-		host = tempHost
-	}
+	host := d.Get("host").(string)
+	unsafeClient := d.Get("unsafe_ssl_client").(bool)
 
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
+	var err error
+	var c client.Client
+	if unsafeClient {
+		c, err = client.NewUnsafeSSLClient(host, username, password)
 
-	if (username != "") && (password != "") {
-		c, err := client.NewClient(host, username, password)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to create MSR client",
-				Detail:   "Unable to authenticate user for authenticated MSR client",
-			})
+	} else {
+		c, err = client.NewDefaultClient(host, username, password)
+	}
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to create MSR client",
+			Detail:   err.Error(),
+		})
 
-			return nil, diags
-		}
-
-		healthy, err := c.IsHealthy(ctx)
-		if !healthy {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "MSR endpoint is not healthy",
-				Detail:   err.Error(),
-			})
-			return nil, diags
-		}
-		return c, diags
+		return nil, diags
 	}
 
-	diags = append(diags, diag.Diagnostic{
-		Severity: diag.Error,
-		Summary:  "Unable to create MSR client",
-		Detail:   "Unable to create anonymous MSR client",
-	})
-
-	return nil, diags
+	healthy, err := c.IsHealthy(ctx)
+	if !healthy {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "MSR endpoint is not healthy",
+			Detail:   err.Error(),
+		})
+		return nil, diags
+	}
+	return c, diags
 }
