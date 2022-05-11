@@ -41,29 +41,40 @@ type ResponseError struct {
 	Errors []Errors `json:"errors"`
 }
 
-// NewClient creates a new MSR HTTP Client
-func NewClient(host, username, password string) (Client, error) {
-	if username == "" || password == "" {
-		return Client{}, ErrEmptyUsernamePass
+// NewDefaultClient creates a new MSR SSL safe Client
+func NewDefaultClient(host, username, password string) (Client, error) {
+	if username == "" || password == "" || host == "" {
+		return Client{}, ErrEmptyClientArgs
 	}
 
+	return NewClient(username, password, host, &http.Client{})
+
+}
+
+// NewUnsafeSSLClient creates a new unsafe MSR HTTP Client
+func NewUnsafeSSLClient(host, username, password string) (Client, error) {
+	if username == "" || password == "" || host == "" {
+		return Client{}, ErrEmptyClientArgs
+	}
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	return NewClient(username, password, host, &http.Client{Transport: tr})
+}
+
+// NewClient creates a new MSR API Client from raw components
+func NewClient(username, password, MsrURL string, HTTPClient *http.Client) (Client, error) {
 	creds := AuthStruct{
 		Username: username,
 		Password: password,
 	}
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	c := Client{
-		HTTPClient: &http.Client{Transport: tr},
-		MsrURL:     DEFAULTMSRURL,
+	return Client{
+		HTTPClient: HTTPClient,
+		MsrURL:     MsrURL,
 		Creds:      creds,
-	}
-	if host != "" {
-		c.MsrURL = host
-	}
-
-	return c, nil
+	}, nil
 }
 
 // doRequest - performing the actual HTTP request

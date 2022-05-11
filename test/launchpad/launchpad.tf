@@ -16,36 +16,36 @@ resource "mcc_config" "jenkins-mke" {
       prune = true
     }
 
-    dynamic  "hosts" {
+    dynamic  "host" {
       for_each = module.managers.machines
       content {
-        role = hosts.value.tags["Role"]
+        role = host.value.tags["Role"]
         ssh  {
-          address = hosts.value.public_ip
+          address = host.value.public_ip
           user = "ubuntu"
           key_path = var.keypath
         }
       }
     }
 
-    dynamic  "hosts" {
+    dynamic  "host" {
       for_each = module.workers.machines
       content {
-        role = hosts.value.tags["Role"]
+        role = host.value.tags["Role"]
         ssh  {
-          address = hosts.value.public_ip
+          address = host.value.public_ip
           user = "ubuntu"
           key_path = var.keypath
         }
       }
     }
 
-    dynamic  "hosts" {
+    dynamic  "host" {
       for_each = module.msrs.machines
       content {
-        role = hosts.value.tags["Role"]
+        role = host.value.tags["Role"]
         ssh  {
-          address = hosts.value.public_ip
+          address = host.value.public_ip
           user = "ubuntu"
           key_path = var.keypath
         }
