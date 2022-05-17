@@ -7,7 +7,7 @@ TF_LOCK_FILE?=${TEST_TF_CHART_ROOT}/.terraform.lock.hcl
 
 VERSION=0.9.0
 
-PROVIDERS?=mcc msr mke
+PROVIDERS?=mirantis-installers mirantis-msr-connect mirantis-mke-connect
 ARCHES?=amd64 arm64
 OSES?=linux darwin
 
@@ -69,9 +69,9 @@ test-acc:
 .PHONY: test-acceptance
 test-acceptance: clean build install test-unit
 	rm -f ${TF_LOCK_FILE}
-	terraform -chdir=${TEST_TF_CHART_ROOT} init
+	terraform -chdir=${TEST_TF_CHART_ROOT} init --upgrade
 	terraform -chdir=${TEST_TF_CHART_ROOT} apply -auto-approve
-	terraform -chdir=${TEST_TF_CHART_ROOT} destroy -auto-approve
+	#terraform -chdir=${TEST_TF_CHART_ROOT} destroy -auto-approve
 
 .PHONY: tf-destroy
 tf-destroy:

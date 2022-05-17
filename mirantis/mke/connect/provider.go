@@ -1,4 +1,4 @@
-package msr
+package connect
 
 import (
 	"context"
@@ -28,9 +28,15 @@ func Provider() *schema.Provider {
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("MKE_PASS", nil),
 			},
+			"unsafe_ssl_client": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				DefaultFunc: schema.EnvDefaultFunc("MKE_UNSAFE_CLIENT", nil),
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"mke_clientbundle": ResourceClientBundle(),
+			"mirantis-mke-connect_clientbundle": ResourceClientBundle(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -40,9 +46,10 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
+	endpoint := d.Get("endpoint").(string)
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
-	endpoint := d.Get("endpoint").(string)
+	unsafeClient := d.Get("unsafe_ssl_client").(bool)
 
 	if (username == "") || (password == "") || (endpoint == "") {
 		diags = append(diags, diag.Diagnostic{
@@ -54,8 +61,16 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		return nil, diags
 	}
 
-	c, err := client.NewUnsafeSSLClient(endpoint, username, password)
-	if err != nil {
+	var c client.Client
+	var clientErr error
+
+	if unsafeClient {
+		c, clientErr = client.NewUnsafeSSLClient(endpoint, username, password)
+	} else {
+		c, clientErr = client.NewClientSimple(endpoint, username, password)
+	}
+
+	if clientErr != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create MKE client",

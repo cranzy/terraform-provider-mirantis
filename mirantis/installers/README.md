@@ -63,108 +63,53 @@ Since the terraform provider is not released on the Hashicorp registry, we need 
 ```
 terraform {
   required_providers {
-    mcc = {
+    mirantis-installers = {
       version = "= 0.9.0"
-      source  = "mirantis.com/providers/mcc"
+      source  = "mirantis.com/providers/mirantis-installers"
     }
   }
 }
 ```
 Afterwards, you just need to import the terraform provider with the following code:
 ```
-provider "mcc" {}
+provider "mirantis-installers" {}
 ```
-You now have the access to all terraform mcc provider **resources/data sources**.
+You now have the access to the provider **resources/data sources**.
 
-## Examples
-This section will show sample working examples of the MCC terraform provider.
+### Launchpad installer resources
 
-### Multiple staticly defined *hosts* attributes:
-```
-    hosts {
-      role = "manager"
-      hooks {
-        after = ["ls -la", "mkdir ~/dd-test-folder"]
-      }
-      ssh {
-        address = "52.35.136.67"
-        user = "ubuntu"
-        key_path = "/Users/dimitardimitrov/Desktop/repos/cranzy-testing-eng/system_test_toolbox/launchpad/ssh_keys/systest-cluster.pem"
-      }
-    }
-    hosts {
-      role = "worker"
-      hooks {
-        after = ["ls -la", "mkdir ~/dd-test-folder"]
-      }
-      ssh {
-        address = "34.222.18.107"
-        user = "ubuntu"
-        key_path = "/Users/dimitardimitrov/Desktop/repos/cranzy-testing-eng/system_test_toolbox/launchpad/ssh_keys/systest-cluster.pem"
-      }
-    }
+You can use launchpad in install MCR/MKE/MSR-classic by using the `mirantis_install_launchpad` resource.
+This is a standalone resource that does not require that launchpad is installed.
 
 ```
-Even though they are separate *hosts* blocks, terraform will combine these blocks into one and threat it as a *list of hosts*.
-
-### Dynamic blocks example:
-```
-   dynamic  "hosts" {
-      for_each = local.hosts
-
-      content {
-        role = hosts.value.role
-        hooks {
-          after = ["ls -la", "mkdir ~/dd-test-folder"]
-        }
-        ssh  {
-          address = hosts.value.instance.public_ip
-          user = hosts.value.ssh.user
-          key_path = hosts.value.ssh.keyPath
-        }
-      }
-    }
-```
-This is the prefered way since in the real world we generate the *hosts* info on the fly. In this case *dynamic hosts* simply means that terraform will dynamically generate the attribute of type *hosts*. After that, we have a **for_each** which will loop through all the *hosts* you set it to. *content* is the actual *hosts* content block which we are familiar from the previous example.
-
-### Full MCC terraform provider example
-Here is a full example of MCC terraform provider being imported, initiated and installing all 3 products(MCR, MKE, MSR):
-```
-terraform {
-  required_providers {
-    mcc = {
-      version = "= 0.9.0"
-      source  = "mirantis.com/providers/mcc"
-    }
-  }
-}
-
-provider "mcc" {}
-
-// MCC terraform provider
-resource "mcc_config" "main" {
+// launchpad install simple (static hosts)
+resource "mirantis-installers_launchpad" "my-cluster" {
 
   metadata {
-    name = "dd-test2"
+    name = "my-cluster-name"
   }
   spec {
     cluster {
       prune = true
     }
 
-    dynamic  "hosts" {
-      for_each = local.hosts
-
-      content {
-        role = hosts.value.role
-        hooks {
-          after = ["ls -la", "mkdir ~/dd-test-folder"]
-        }
-        ssh  {
-          address = hosts.value.instance.public_ip
-          user = hosts.value.ssh.user
-          key_path = hosts.value.ssh.keyPath
-        }
+    host {
+      role = "manager"
+      ssh {
+        address = "52.35.136.67"
+        user = "ubuntu"
+        key_path = "./systest-cluster.pem"
+      }
+    }
+    host {
+      role = "worker"
+      hooks {
+        after = ["ls -la"]
+      }
+      ssh {
+        address = "34.222.18.107"
+        user = "ubuntu"
+        key_path = "./systest-cluster.pem"
       }
     }
 
@@ -196,6 +141,25 @@ resource "mcc_config" "main" {
 }
 ```
 
+Note that static host lists can be inflexible, but terraform offers a feature
+for dynamically writing such blocks from data structures such as lists:
+
+```
+   dynamic  "host" {
+      for_each = local.hosts
+
+      content {
+        role = hosts.value.role
+        ssh  {
+          address = hosts.value.instance.public_ip
+          user = hosts.value.ssh.user
+          key_path = hosts.value.ssh.keyPath
+        }
+      }
+    }
+```
+
 ## References
+
 A link to the private MCC github repo: https://github.com/Mirantis/mcc
 A link to the public Mirantis Launchpad github repo: https://github.com/Mirantis/launchpad

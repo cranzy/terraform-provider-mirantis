@@ -1,4 +1,4 @@
-package msr
+package connect
 
 import (
 	"context"
@@ -35,13 +35,13 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"msr_user": ResourceUser(),
-			"msr_org":  ResourceOrg(),
-			"msr_team": ResourceTeam(),
-			"msr_repo": ResourceRepo(),
+			"mirantis-msr-connect_user": ResourceUser(),
+			"mirantis-msr-connect_org":  ResourceOrg(),
+			"mirantis-msr-connect_team": ResourceTeam(),
+			"mirantis-msr-connect_repo": ResourceRepo(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"msr_accounts": dataSourceAccounts(),
+			"mirantis-msr-connect_accounts": dataSourceAccounts(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

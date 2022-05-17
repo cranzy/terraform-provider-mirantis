@@ -1,6 +1,6 @@
 # terraform-provider-mirantis
 
-A terraform provider to control configuration across multiple Mirantis Products.
+Terraform providers to manage Mirantis Products.
 
 [![CodeQL](https://github.com/Mirantis/terraform-provider-mirantis/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Mirantis/terraform-provider-mirantis/actions/workflows/codeql-analysis.yml)
 [![Go](https://github.com/Mirantis/terraform-provider-mirantis/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/Mirantis/terraform-provider-mirantis/actions/workflows/go.yml)

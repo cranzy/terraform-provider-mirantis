@@ -1,4 +1,4 @@
-package mcc
+package installers
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -7,7 +7,7 @@ import (
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
-			"mcc_config": ResourceConfig(),
+			"mirantis-installers_launchpad": ResourceConfig(),
 		},
 	}
 }

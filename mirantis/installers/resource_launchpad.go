@@ -1,4 +1,4 @@
-package mcc
+package installers
 
 import (
 	"bytes"

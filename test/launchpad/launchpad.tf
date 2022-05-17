@@ -1,10 +1,9 @@
 
-// MCC terraform provider
+// Mirantis installing terraform provider
+provider "mirantis-installers" {}
 
-provider "mcc" {}
-
-// MCC terraform provider
-resource "mcc_config" "jenkins-mke" {
+// Launchpad installer
+resource "mirantis-installers_launchpad" "test" {
 
   skip_destroy = true
 
@@ -87,12 +86,6 @@ resource "mcc_config" "jenkins-mke" {
   } // spec
 }
 
-output "mke_san" {
-  value = module.managers.lb_dns_name
-}
 output "mke_cluster_name" {
-  value = mcc_config.jenkins-mke.metadata[0].name
-}
-output "mke" {
-  value = mcc_config.jenkins-mke.spec[0].mke[0]
+  value = mirantis-installers_launchpad.test.metadata[0].name
 }
