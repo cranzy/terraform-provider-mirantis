@@ -31,7 +31,7 @@ type UpdateAccount struct {
 type ResponseAccount struct {
 	Name         string `json:"name"`
 	ID           string `json:"id"`
-	FullName     string `json:"fullName"`
+	FullName     string `json:"fullName,omitempty"`
 	IsActive     bool   `json:"isActive"`
 	IsAdmin      bool   `json:"isAdmin"`
 	IsOrg        bool   `json:"isOrg"`

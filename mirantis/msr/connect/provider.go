@@ -42,6 +42,7 @@ func Provider() *schema.Provider {
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"mirantis-msr-connect_accounts": dataSourceAccounts(),
+			"mirantis-msr-connect_account":  dataSourceAccount(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
