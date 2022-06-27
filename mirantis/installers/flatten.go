@@ -10,7 +10,8 @@ import (
 	k0s_rig "github.com/k0sproject/rig"
 )
 
-func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
+// Flattens the config input
+func FlattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 	// Retrieve the metadata
 	metadataList := d.Get("metadata").([]interface{})[0]
 	m := metadataList.(map[string]interface{})
@@ -60,13 +61,14 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 			address := ssh["address"].(string)
 			key_path := ssh["key_path"].(string)
 			user := ssh["user"].(string)
+			port := ssh["port"].(int)
 
 			connection = k0s_rig.Connection{
 				SSH: &k0s_rig.SSH{
 					Address: address,
 					KeyPath: key_path,
 					User:    user,
-					Port:    22,
+					Port:    port,
 				},
 			}
 		} else if len(host["winrm"].([]interface{})) > 0 {
@@ -90,7 +92,7 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 				},
 			}
 		} else {
-			return mcc_mke.MKE{}, fmt.Errorf("missing connection block for host: %+v", h)
+			return mcc_mke.MKE{}, fmt.Errorf("%w: %s", ErrMissingConnectionBlock, h)
 		}
 
 		extractedHost := &mcc_api.Host{
@@ -111,7 +113,7 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 	mcrRepoURL := mcr["repo_url"].(string)
 	mcrVersion := mcr["version"].(string)
 
-	mccConfig := common.MCRConfig{
+	mcrConfig := common.MCRConfig{
 		Version:           mcrVersion,
 		InstallURLLinux:   mcrInstallURLLinux,
 		InstallURLWindows: mcrInstallURLWindows,
@@ -188,7 +190,7 @@ func flattenInputConfigModel(d *schema.ResourceData) (mcc_mke.MKE, error) {
 				Prune: prune,
 			},
 			MKE: mkeConfig,
-			MCR: mccConfig,
+			MCR: mcrConfig,
 			MSR: msrConfig,
 		},
 	}

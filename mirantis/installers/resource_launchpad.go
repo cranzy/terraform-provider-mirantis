@@ -111,6 +111,11 @@ func ResourceConfig() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
+												"port": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Default:  22,
+												},
 											},
 										},
 									}, // ssh
@@ -251,7 +256,7 @@ func ResourceConfig() *schema.Resource {
 }
 
 func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	mkeClient, err := flattenInputConfigModel(d)
+	mkeClient, err := FlattenInputConfigModel(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -292,7 +297,7 @@ func resourceConfigDelete(ctx context.Context, d *schema.ResourceData, m interfa
 		logrusBuffer := &bytes.Buffer{}
 		logrus.SetOutput(logrusBuffer)
 
-		mkeClient, err := flattenInputConfigModel(d)
+		mkeClient, err := FlattenInputConfigModel(d)
 		if err != nil {
 			return diag.FromErr(err)
 		}

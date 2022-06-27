@@ -13,7 +13,7 @@ const (
 )
 
 var (
-	ErrCouldNotCreateClient = errors.New("Could not create a client")
+	ErrCouldNotCreateClient = errors.New("could not create a client")
 )
 
 // Client MSR client
@@ -78,7 +78,7 @@ func (c *Client) reqURLFromTarget(target string) string {
 	}
 	targetURL, err := url.Parse(target)
 	if err != nil {
-		panic(fmt.Errorf("Tried to generate relative URL from a client: %s", err))
+		panic(fmt.Errorf("tried to generate relative URL from a client: %s", err))
 	}
 	relativeURL := c.apiURL.ResolveReference(targetURL)
 

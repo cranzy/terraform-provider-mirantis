@@ -3,7 +3,7 @@ package connect_test
 import (
 	"testing"
 
-	connect "github.com/Mirantis/terraform-provider-mirantis/mirantis/msr/connect"
+	connect "github.com/Mirantis/terraform-provider-mirantis/mirantis/mke/connect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
