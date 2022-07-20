@@ -40,6 +40,11 @@ func ResourceUser() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"password": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -53,9 +58,14 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.Errorf("unable to cast meta interface to MSR Client")
 	}
 
+	pass := d.Get("password").(string)
+	if pass == "" {
+		pass = client.GeneratePass()
+	}
+
 	user := client.CreateAccount{
 		Name:       d.Get("name").(string),
-		Password:   client.GeneratePass(),
+		Password:   pass,
 		FullName:   d.Get("full_name").(string),
 		IsActive:   d.Get("is_active").(bool),
 		IsAdmin:    d.Get("is_admin").(bool),
@@ -67,6 +77,9 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 	if err := d.Set("last_updated", time.Now().Format(time.RFC850)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("password", user.Password); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(u.ID)
